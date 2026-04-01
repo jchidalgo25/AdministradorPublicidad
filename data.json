@@ -1,0 +1,132 @@
+{
+  "images": [
+    {
+      "id": 1773803435595.7336,
+      "name": "image_campana_hope_delportal.jpg",
+      "file": "1773803435581-183890240.jpg",
+      "url": "/imagenes/1773803435581-183890240.jpg"
+    },
+    {
+      "id": 1773803443794.0774,
+      "name": "Imagen_SRI_POS.jpg",
+      "file": "1773803443785-32584025.jpg",
+      "url": "/imagenes/1773803443785-32584025.jpg"
+    },
+    {
+      "id": 1773863424735.6873,
+      "name": "Wallpaper_DelPortal2026.png",
+      "file": "1773863424730-556167195.png",
+      "url": "/imagenes/1773863424730-556167195.png"
+    },
+    {
+      "id": 1774622270485.1711,
+      "name": "Wallpaper20200909.jpg",
+      "file": "1774622270160-688363871.jpg",
+      "url": "/imagenes/1774622270160-688363871.jpg"
+    }
+  ],
+  "config": {
+    "duration": 5,
+    "transition": "fade",
+    "fit": "fill",
+    "days": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      0
+    ],
+    "timeStart": "07:00",
+    "timeEnd": "23:59"
+  },
+  "updatedAt": "2026-03-31T20:33:41.288Z",
+  "campanas": [
+    {
+      "id": 1774895034654,
+      "nombre": "prueba campana ",
+      "fecha_desde": "2026-03-30",
+      "fecha_hasta": "2026-03-30",
+      "hora_desde": "13:00",
+      "hora_hasta": "14:00",
+      "activo": true,
+      "images": [
+        {
+          "id": 1774895057165.1467,
+          "name": "Screenshot 2025-10-29 083707.png",
+          "file": "1774895057160-577921841.png",
+          "url": "/imagenes-campana/1774895057160-577921841.png"
+        }
+      ]
+    }
+  ],
+  "sets": [
+    {
+      "id": 1774987971293,
+      "nombre": "Imagenes Globales",
+      "activo": true,
+      "establecimientos": [
+        "007",
+        "006",
+        "080",
+        "035",
+        "008",
+        "037",
+        "024",
+        "069",
+        "011",
+        "029",
+        "062"
+      ],
+      "images": [
+        {
+          "id": 1774988128002.8782,
+          "name": "image_campana_hope_delportal.jpg",
+          "file": "1774988127997-882254974.jpg",
+          "url": "/imagenes-sets/1774988127997-882254974.jpg"
+        },
+        {
+          "id": 1774988131224.9321,
+          "name": "Imagen_SRI_POS.jpg",
+          "file": "1774988131215-127031383.jpg",
+          "url": "/imagenes-sets/1774988131215-127031383.jpg"
+        },
+        {
+          "id": 1774988146393.1323,
+          "name": "Wallpaper_DelPortal2026.png",
+          "file": "1774988146388-732766906.png",
+          "url": "/imagenes-sets/1774988146388-732766906.png"
+        },
+        {
+          "id": 1774988149930.3152,
+          "name": "Wallpaper_SupermercadosMIO2026.png",
+          "file": "1774988149925-346521138.png",
+          "url": "/imagenes-sets/1774988149925-346521138.png"
+        }
+      ]
+    },
+    {
+      "id": 1774989192175,
+      "nombre": "imagenes moderna",
+      "activo": true,
+      "establecimientos": [
+        "055"
+      ],
+      "images": [
+        {
+          "id": 1774989212056.1147,
+          "name": "Wallpaper20200909.jpg",
+          "file": "1774989211956-620608441.jpg",
+          "url": "/imagenes-sets/1774989211956-620608441.jpg"
+        },
+        {
+          "id": 1774989219872.856,
+          "name": "26d50eb1-0e8a-4568-9deb-31147fe9105e.jpg",
+          "file": "1774989219871-806897615.jpg",
+          "url": "/imagenes-sets/1774989219871-806897615.jpg"
+        }
+      ]
+    }
+  ]
+}

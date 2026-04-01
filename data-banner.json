@@ -1,0 +1,21 @@
+{
+  "images": [
+    {
+      "id": 1774454295027.395,
+      "name": "Pickup_Banner Inicio.jpg.jpeg",
+      "file": "1774454295018-519243129.jpeg",
+      "url": "/imagenes-banner/1774454295018-519243129.jpeg"
+    },
+    {
+      "id": 1774454299436.2246,
+      "name": "Wallpaper20200909.jpg",
+      "file": "1774454299400-545100776.jpg",
+      "url": "/imagenes-banner/1774454299400-545100776.jpg"
+    }
+  ],
+  "config": {
+    "duration": 3,
+    "fit": "contain"
+  },
+  "updatedAt": "2026-03-25T15:59:16.817Z"
+}

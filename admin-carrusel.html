@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdManager POS</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+  :root{--verde:#006633;--verde-claro:#00a352;--verde-oscuro:#004d26;--amarillo:#ffd200;--bg:#f5f5f0;--surface:#fff;--border:#e0e0d8;--text:#1a1a1a;--muted:#6b6b6b;--danger:#d94040;--shadow:0 2px 16px rgba(0,102,51,0.10);}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+  header{background:var(--verde);color:#fff;padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,0.18);}
+  header h1{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:10px;}
+  header h1 span{color:var(--amarillo);}
+  .badge-header{background:var(--amarillo);color:var(--verde-oscuro);font-family:'Syne',sans-serif;font-weight:700;font-size:.75rem;padding:4px 12px;border-radius:20px;}
+  .container{max-width:1400px;margin:0 auto;padding:28px 24px;}
+  .tabs{display:flex;gap:4px;margin-bottom:24px;background:var(--surface);padding:6px;border-radius:14px;border:1px solid var(--border);width:fit-content;flex-wrap:wrap;}
+  .tab{padding:10px 20px;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:.2s;}
+  .tab.active{background:var(--verde);color:#fff;}
+  .tab-content{display:none;}.tab-content.active{display:block;}
+  .grid{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;box-shadow:var(--shadow);margin-bottom:18px;}
+  .card-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--verde);margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+  .card-title::before{content:'';display:inline-block;width:4px;height:18px;background:var(--amarillo);border-radius:2px;}
+  .form-group{margin-bottom:13px;}
+  .form-group label{display:block;font-size:.78rem;font-weight:500;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
+  .form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 13px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.88rem;background:#fafaf8;color:var(--text);outline:none;transition:.15s;}
+  .form-group input:focus,.form-group select:focus{border-color:var(--verde-claro);box-shadow:0 0 0 3px rgba(0,163,82,.1);}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .btn-primary{width:100%;padding:11px;background:var(--verde);color:#fff;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:.92rem;cursor:pointer;transition:.2s;}
+  .btn-primary:hover{background:var(--verde-claro);}
+  .btn-secondary{padding:7px 14px;background:#f0faf5;color:var(--verde);border:1.5px solid var(--verde);border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:.8rem;cursor:pointer;transition:.2s;}
+  .btn-secondary:hover{background:var(--verde);color:#fff;}
+  .btn-danger-sm{padding:5px 10px;background:#fde8e8;color:var(--danger);border:none;border-radius:6px;font-size:.75rem;cursor:pointer;font-weight:500;}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .stat-box{background:#f0faf5;border-radius:10px;padding:11px 14px;border:1px solid #c8ead8;}
+  .stat-num{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--verde);line-height:1;}
+  .stat-label{font-size:.72rem;color:var(--muted);margin-top:2px;}
+  .schedule-days{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+  .day-pill{padding:5px 11px;border-radius:20px;font-size:.78rem;font-weight:500;border:1.5px solid var(--border);background:#f5f5f0;cursor:pointer;transition:.15s;user-select:none;}
+  .day-pill.active{background:var(--verde);color:#fff;border-color:var(--verde);}
+  .url-box{background:#f0faf5;border:1px solid #b2e0c8;border-radius:8px;padding:9px 13px;font-size:.8rem;color:var(--verde-oscuro);display:flex;align-items:center;justify-content:space-between;gap:8px;word-break:break-all;margin-bottom:10px;}
+  .url-box .copy-btn{background:var(--verde);color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:.73rem;cursor:pointer;white-space:nowrap;}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--verde);color:#fff;padding:12px 22px;border-radius:10px;font-weight:500;font-size:.88rem;transform:translateY(80px);opacity:0;transition:.3s;z-index:999;box-shadow:0 4px 20px rgba(0,102,51,.35);}
+  .toast.show{transform:translateY(0);opacity:1;}
+  .loading{text-align:center;padding:16px;color:var(--muted);}
+  .empty-state{text-align:center;padding:28px;color:var(--muted);font-size:.88rem;}
+
+  /* SETS */
+  .set-card{background:#fafaf8;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;}
+  .set-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+  .set-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;color:var(--text);}
+  .set-meta{font-size:.75rem;color:var(--muted);margin-top:3px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .set-actions{display:flex;gap:6px;flex-shrink:0;}
+  .set-images{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .set-img{position:relative;width:90px;height:65px;border-radius:7px;overflow:hidden;border:1px solid var(--border);}
+  .set-img img{width:100%;height:100%;object-fit:cover;}
+  .set-img .del-img{position:absolute;top:2px;right:2px;background:rgba(200,50,50,.85);color:#fff;border:none;border-radius:4px;width:18px;height:18px;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .upload-set{border:1.5px dashed var(--verde-claro);border-radius:8px;padding:10px;text-align:center;background:#f0faf5;cursor:pointer;position:relative;font-size:.78rem;color:var(--verde);margin-top:8px;}
+  .upload-set input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+  .badge-global{background:#d4edda;color:#155724;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:20px;}
+  .badge-local{background:#cce5ff;color:#004085;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:20px;}
+  .badge-inactivo{background:#f8d7da;color:#721c24;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:20px;}
+
+  /* CAMPAÑAS */
+  .campana-card{background:#fafaf8;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;}
+  .campana-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .campana-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.92rem;color:var(--text);}
+  .campana-dates{font-size:.75rem;color:var(--muted);margin-top:2px;}
+  .campana-images{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .campana-img{position:relative;width:80px;height:58px;border-radius:6px;overflow:hidden;border:1px solid var(--border);}
+  .campana-img img{width:100%;height:100%;object-fit:cover;}
+  .campana-img .del-img{position:absolute;top:2px;right:2px;background:rgba(200,50,50,.85);color:#fff;border:none;border-radius:4px;width:18px;height:18px;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .badge-activa{background:#d4edda;color:#155724;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:20px;}
+  .badge-inactiva{background:#f8d7da;color:#721c24;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:20px;}
+  .badge-futura{background:#fff3cd;color:#856404;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:20px;}
+  .badge-expirada{background:#e2e3e5;color:#383d41;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:20px;}
+  .upload-campana{border:1.5px dashed var(--verde-claro);border-radius:8px;padding:10px;text-align:center;background:#f0faf5;cursor:pointer;position:relative;font-size:.78rem;color:var(--verde);margin-top:8px;}
+  .upload-campana input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+
+  /* ENCUESTA */
+  .tipo-badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:.7rem;font-weight:700;margin-right:4px;}
+  .tipo-EMOJIS{background:#fff3cd;color:#856404;}.tipo-ABIERTA{background:#d1ecf1;color:#0c5460;}
+  .tipo-CERRADA{background:#d4edda;color:#155724;}.tipo-MULTIPLE{background:#e2d9f3;color:#4a235a;}
+  .tipo-NUMERICA{background:#fde8e8;color:#721c24;}
+  .badge-modo{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.7rem;font-weight:700;}
+  .badge-fija{background:#fff3cd;color:#856404;}.badge-aleatoria{background:#d1ecf1;color:#0c5460;}
+  .badge-activo{background:#d4edda;color:#155724;}.badge-inactivo2{background:#f8d7da;color:#721c24;}
+  .pregunta-card{background:#fafaf8;border:1px solid var(--border);border-radius:12px;padding:13px 17px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px;}
+  .pq-num{background:var(--verde);color:#fff;font-family:'Syne',sans-serif;font-weight:800;font-size:.8rem;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+  .pq-body{flex:1;}.pq-texto{font-size:.9rem;font-weight:500;margin-bottom:5px;}
+  .pq-meta{font-size:.72rem;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .pq-actions{display:flex;gap:7px;margin-top:7px;}
+  .tipo-selector{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:4px;}
+  .tipo-btn{padding:8px 4px;border:2px solid var(--border);border-radius:8px;text-align:center;cursor:pointer;transition:.15s;background:#fafaf8;}
+  .tipo-btn:hover{border-color:var(--verde-claro);background:#f0faf5;}
+  .tipo-btn.selected{border-color:var(--verde);background:#f0faf5;}
+  .tipo-btn .tipo-icon{font-size:1.2rem;display:block;margin-bottom:2px;}
+  .tipo-btn .tipo-label{font-size:.67rem;font-weight:700;color:var(--muted);}
+  .tipo-btn.selected .tipo-label{color:var(--verde);}
+  .field-opciones{display:none;}.field-opciones.show{display:block;}
+  .field-seleccion-multiple{display:none;}.field-seleccion-multiple.show{display:flex;align-items:center;gap:8px;margin-bottom:13px;}
+  .opciones-editor{background:#f8f8f5;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:6px;}
+  .opcion-row{display:flex;gap:6px;margin-bottom:6px;align-items:center;}
+  .opcion-row input{flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;}
+  .btn-add-opcion{background:#f0faf5;color:var(--verde);border:1.5px dashed var(--verde-claro);border-radius:8px;padding:7px;width:100%;cursor:pointer;font-size:.82rem;margin-top:2px;}
+  .btn-del-opcion{background:#fde8e8;color:var(--danger);border:none;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:.75rem;}
+  .filtros{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end;}
+  .filtros .form-group{margin:0;min-width:140px;}
+  .tabla-respuestas{width:100%;border-collapse:collapse;font-size:.79rem;}
+  .tabla-respuestas th{background:var(--verde);color:#fff;padding:9px 11px;text-align:left;font-family:'Syne',sans-serif;font-weight:700;font-size:.75rem;}
+  .tabla-respuestas td{padding:8px 11px;border-bottom:1px solid var(--border);vertical-align:top;}
+  .tabla-respuestas tr:hover td{background:#f0faf5;}
+  .cal-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:20px;font-weight:700;font-size:.77rem;}
+  .cal-1{background:#fde8e8;color:#c0392b;}.cal-2{background:#fdf3e0;color:#e67e22;}
+  .cal-3{background:#fefde0;color:#c0a800;}.cal-4{background:#eafaf1;color:#27ae60;}.cal-5{background:#d4efdf;color:#1e8449;}
+  .table-wrap{overflow-x:auto;}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;}
+  .modal-overlay.show{display:flex;}
+  .modal{background:#fff;border-radius:16px;padding:24px;max-width:560px;width:92%;box-shadow:0 8px 40px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto;}
+  .modal h3{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:var(--verde);margin-bottom:16px;}
+  .modal-actions{display:flex;gap:10px;margin-top:16px;}
+  .modal-actions button{flex:1;}
+  .btn-cancel{padding:11px;background:#f5f5f0;color:var(--muted);border:1px solid var(--border);border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;}
+  /* MULTISELECT */
+  .ms-wrap{position:relative;width:100%;}
+  .ms-input{min-height:38px;border:1px solid var(--border);border-radius:8px;padding:4px 32px 4px 8px;display:flex;flex-wrap:wrap;gap:4px;cursor:pointer;background:#fafaf8;position:relative;align-items:center;}
+  .ms-input:hover{border-color:var(--verde-claro);}
+  .ms-chip{background:#f0faf5;border:1px solid #c8ead8;border-radius:20px;padding:2px 8px 2px 10px;font-size:.72rem;color:var(--verde-oscuro);display:flex;align-items:center;gap:4px;white-space:nowrap;}
+  .ms-chip button{background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;line-height:1;padding:0;}
+  .ms-chip button:hover{color:var(--danger);}
+  .ms-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:11px;pointer-events:none;}
+  .ms-placeholder{font-size:.82rem;color:var(--muted);padding:2px 4px;}
+  .ms-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;border:1px solid var(--border);border-radius:8px;background:#fff;z-index:300;box-shadow:0 4px 16px rgba(0,102,51,.12);}
+  .ms-search{width:100%;border:none;border-bottom:1px solid var(--border);padding:8px 12px;font-size:.82rem;background:#fafaf8;outline:none;border-radius:8px 8px 0 0;}
+  .ms-select-all{padding:7px 12px;font-size:.78rem;color:var(--muted);cursor:pointer;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;}
+  .ms-select-all:hover{background:#f0faf5;}
+  .ms-list{max-height:180px;overflow-y:auto;}
+  .ms-option{display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;font-size:.82rem;color:var(--text);}
+  .ms-option:hover{background:#f0faf5;}
+  .ms-option input{width:14px;height:14px;accent-color:var(--verde);flex-shrink:0;}
+  .ms-option.checked{background:#f0faf5;}
+  .ms-none{padding:12px;font-size:.82rem;color:var(--muted);text-align:center;}
+</style>
+</head>
+<body>
+<header>
+  <h1>📺 Administrador<span>Imagenes</span> POS</h1>
+  <div class="badge-header">PANEL DE PUBLICIDAD</div>
+</header>
+<div class="container">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('carrusel')">🖼️ Carrusel</button>
+    <button class="tab" onclick="switchTab('banner')">📌 Banner Derecho</button>
+    <button class="tab" onclick="switchTab('encuesta-config')">⚙️ Encuesta</button>
+    <button class="tab" onclick="switchTab('encuesta-respuestas')">📊 Respuestas</button>
+  </div>
+
+  <!-- CARRUSEL -->
+  <div id="tab-carrusel" class="tab-content active">
+    <div class="grid">
+      <div>
+        <div class="card">
+          <div class="card-title">Sets de Imágenes</div>
+          <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Cada set puede asignarse a locales específicos. Si un local no tiene set propio, se muestran los sets globales.</p>
+          <button class="btn-secondary" style="margin-bottom:16px" onclick="abrirModalSet('carrusel')">+ Nuevo Set</button>
+          <div id="setsList"><div class="loading">Cargando...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🌟 Campañas Especiales</div>
+          <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Las campañas activas reemplazan todos los sets durante su vigencia.</p>
+          <button class="btn-secondary" style="margin-bottom:16px" onclick="abrirModalCampana('carrusel')">+ Nueva Campaña</button>
+          <div id="campanasList"><div class="loading">Cargando...</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-title">Configuración</div>
+          <div class="form-group"><label>Tiempo por imagen (seg)</label><input type="number" id="cfgDuration" value="5" min="1" max="60"></div>
+          <div class="form-group"><label>Ajuste de imagen</label><select id="cfgFit"><option value="cover">Cover</option><option value="contain">Contain</option><option value="fill">Stretch</option></select></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Horario</div>
+          <div class="form-group"><label>Días activos</label>
+            <div class="schedule-days" id="scheduleDays">
+              <div class="day-pill active" data-day="1">Lun</div><div class="day-pill active" data-day="2">Mar</div>
+              <div class="day-pill active" data-day="3">Mié</div><div class="day-pill active" data-day="4">Jue</div>
+              <div class="day-pill active" data-day="5">Vie</div><div class="day-pill" data-day="6">Sáb</div><div class="day-pill" data-day="0">Dom</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="margin:0"><label>Inicio</label><input type="time" id="cfgTimeStart" value="08:00"></div>
+            <div class="form-group" style="margin:0"><label>Fin</label><input type="time" id="cfgTimeEnd" value="23:00"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">URL</div>
+          <div class="url-box"><span>http://localhost:3000/carrusel.html?est=XXX</span><button class="copy-btn" onclick="copyUrl('http://localhost:3000/carrusel.html')">Copiar</button></div>
+          <button class="btn-primary" onclick="guardarConfig()">💾 Guardar Configuración</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BANNER -->
+  <div id="tab-banner" class="tab-content">
+    <div class="grid">
+      <div>
+        <div class="card">
+          <div class="card-title">Sets de Imágenes — Banner</div>
+          <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Igual que el carrusel, cada set se puede asignar a locales específicos.</p>
+          <button class="btn-secondary" style="margin-bottom:16px" onclick="abrirModalSet('banner')">+ Nuevo Set</button>
+          <div id="bannerSetsList"><div class="loading">Cargando...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🌟 Campañas Especiales</div>
+          <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Las campañas activas reemplazan todos los sets durante su vigencia.</p>
+          <button class="btn-secondary" style="margin-bottom:16px" onclick="abrirModalCampana('banner')">+ Nueva Campaña</button>
+          <div id="bannerCampanasList"><div class="loading">Cargando...</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-title">Configuración Banner</div>
+          <div class="form-group"><label>Tiempo por imagen (seg)</label><input type="number" id="bannerCfgDuration" value="8" min="1" max="60"></div>
+          <div class="form-group"><label>Ajuste</label><select id="bannerCfgFit"><option value="contain">Contain</option><option value="cover">Cover</option><option value="fill">Stretch</option></select></div>
+          <button class="btn-primary" onclick="guardarConfigBanner()">💾 Guardar</button>
+        </div>
+        <div class="card">
+          <div class="card-title">URL Banner</div>
+          <div class="url-box"><span>http://localhost:3000/banner.html?est=XXX</span><button class="copy-btn" onclick="copyUrl('http://localhost:3000/banner.html')">Copiar</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ENCUESTA CONFIG -->
+  <div id="tab-encuesta-config" class="tab-content">
+    <div class="grid">
+      <div>
+        <div class="card">
+          <div class="card-title">Preguntas Configuradas</div>
+          <div id="preguntasList"><div class="loading">Cargando...</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-title">Nueva Pregunta</div>
+          <div class="form-group"><label>Tipo</label>
+            <div class="tipo-selector">
+              <div class="tipo-btn selected" data-tipo="EMOJIS" onclick="selectTipo(this)"><span class="tipo-icon">😊</span><span class="tipo-label">Emojis</span></div>
+              <div class="tipo-btn" data-tipo="CERRADA" onclick="selectTipo(this)"><span class="tipo-icon">✅</span><span class="tipo-label">Sí/No</span></div>
+              <div class="tipo-btn" data-tipo="NUMERICA" onclick="selectTipo(this)"><span class="tipo-icon">⭐</span><span class="tipo-label">Numérica</span></div>
+              <div class="tipo-btn" data-tipo="MULTIPLE" onclick="selectTipo(this)"><span class="tipo-icon">☑️</span><span class="tipo-label">Múltiple</span></div>
+              <div class="tipo-btn" data-tipo="ABIERTA" onclick="selectTipo(this)"><span class="tipo-icon">✍️</span><span class="tipo-label">Abierta</span></div>
+            </div>
+            <input type="hidden" id="nuevoTipo" value="EMOJIS">
+          </div>
+          <div class="form-group"><label>Pregunta</label><textarea id="nuevaPregunta" placeholder="Ej: ¿Qué tan satisfecho está?"></textarea></div>
+          <div class="field-seleccion-multiple" id="fieldSelMultiple"><input type="checkbox" id="nuevoSelMultiple" style="width:auto"><label style="text-transform:none;letter-spacing:0;font-size:.88rem">Permitir selección múltiple</label></div>
+          <div class="field-opciones" id="fieldOpciones">
+            <div class="form-group"><label>Opciones</label>
+              <div class="opciones-editor" id="opcionesEditor">
+                <div class="opcion-row"><input type="text" placeholder="Opción 1"><button class="btn-del-opcion" onclick="delOpcion(this)">✕</button></div>
+                <div class="opcion-row"><input type="text" placeholder="Opción 2"><button class="btn-del-opcion" onclick="delOpcion(this)">✕</button></div>
+              </div>
+              <button class="btn-add-opcion" onclick="addOpcion()">+ Agregar opción</button>
+            </div>
+          </div>
+          <div class="form-group"><label>Modo</label><select id="nuevaModo"><option value="ALEATORIA">Aleatoria</option><option value="FIJA">Fija</option></select></div>
+          <div class="form-row">
+            <div class="form-group"><label>Orden</label><input type="number" id="nuevoOrden" value="0" min="0"></div>
+            <div class="form-group">
+              <label>Establecimientos</label>
+              <div class="ms-wrap" id="msNuevo">
+                <div class="ms-input" id="msNuevoInput" onclick="toggleMs('Nuevo')">
+                  <span class="ms-placeholder" id="msNuevoPlaceholder">Todos los locales</span>
+                  <span class="ms-arrow">▾</span>
+                </div>
+                <div class="ms-dropdown" id="msNuevoDropdown" style="display:none">
+                  <input class="ms-search" type="text" placeholder="Buscar..." oninput="filterMs('Nuevo',this.value)">
+                  <div class="ms-select-all" onclick="selectAllMs('Nuevo')">
+                    <input type="checkbox" id="msNuevoChkAll" style="width:14px;height:14px;accent-color:var(--verde)">
+                    <span>Todos los locales</span>
+                  </div>
+                  <div class="ms-list" id="msNuevoList"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group" style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="nuevoActivo" checked style="width:auto"><label for="nuevoActivo" style="text-transform:none;letter-spacing:0">Activa</label></div>
+          <button class="btn-primary" onclick="crearPregunta()">➕ Agregar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESPUESTAS -->
+  <div id="tab-encuesta-respuestas" class="tab-content">
+    <div class="card">
+      <div class="card-title">Filtros</div>
+      <div class="filtros">
+        <div class="form-group"><label>Desde</label><input type="date" id="filtroDesde"></div>
+        <div class="form-group"><label>Hasta</label><input type="date" id="filtroHasta"></div>
+        <div class="form-group"><label>Establecimiento</label><select id="filtroEst"><option value="">Todos</option></select></div>
+        <div class="form-group"><label>Pregunta</label><select id="filtroPregunta"><option value="">Todas</option></select></div>
+        <button class="btn-secondary" onclick="buscarRespuestas()">🔍 Buscar</button>
+        <button class="btn-secondary" onclick="exportarCSV()">📥 CSV</button>
+      </div>
+      <div class="stats" id="statsRespuestas" style="display:none">
+        <div class="stat-box"><div class="stat-num" id="totalRespuestas">0</div><div class="stat-label">Respuestas</div></div>
+        <div class="stat-box"><div class="stat-num" id="promedioCalif">-</div><div class="stat-label">Promedio</div></div>
+      </div>
+      <div class="table-wrap">
+        <table class="tabla-respuestas"><thead><tr><th>Fecha</th><th>Factura</th><th>Cliente</th><th>Local</th><th>POS</th><th>Cajero</th><th>Pregunta</th><th>Tipo</th><th>Respuesta</th></tr></thead>
+        <tbody id="tbodyRespuestas"><tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px">Use los filtros para buscar</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Set -->
+<div class="modal-overlay" id="modalSet">
+  <div class="modal">
+    <h3 id="modalSetTitulo">🖼️ Nuevo Set de Imágenes</h3>
+    <input type="hidden" id="setCtx">
+    <input type="hidden" id="setEditId">
+    <div class="form-group"><label>Nombre del set</label><input type="text" id="setNombre" placeholder="Ej: Imágenes Globales, Promo Machala..."></div>
+    <div class="form-group">
+      <label>Establecimientos (vacío = todos los locales)</label>
+      <div class="ms-wrap" id="msSet">
+        <div class="ms-input" id="msSetInput" onclick="toggleMs('Set')">
+          <span class="ms-placeholder" id="msSetPlaceholder">Todos los locales (global)</span>
+          <span class="ms-arrow">▾</span>
+        </div>
+        <div class="ms-dropdown" id="msSetDropdown" style="display:none">
+          <input class="ms-search" type="text" placeholder="Buscar..." oninput="filterMs('Set',this.value)">
+          <div class="ms-select-all" onclick="selectAllMs('Set')">
+            <input type="checkbox" id="msSetChkAll" style="width:14px;height:14px;accent-color:var(--verde)">
+            <span>Todos los locales</span>
+          </div>
+          <div class="ms-list" id="msSetList"></div>
+        </div>
+      </div>
+    </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="setActivo" checked style="width:auto"><label for="setActivo" style="text-transform:none;letter-spacing:0">Activo</label></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="cerrarModalSet()">Cancelar</button>
+      <button class="btn-primary" onclick="guardarSet()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Campaña -->
+<div class="modal-overlay" id="modalCampana">
+  <div class="modal">
+    <h3 id="modalCampanaTitulo">🌟 Nueva Campaña Especial</h3>
+    <input type="hidden" id="campanaCtx">
+    <input type="hidden" id="campanaEditId">
+    <div class="form-group"><label>Nombre</label><input type="text" id="campanaNombre" placeholder="Ej: Campaña Navidad 2025"></div>
+    <div class="form-group">
+      <label>Establecimientos (vacío = todos los locales)</label>
+      <div class="ms-wrap" id="msCampana">
+        <div class="ms-input" id="msCampanaInput" onclick="toggleMs('Campana')">
+          <span class="ms-placeholder" id="msCampanaPlaceholder">Todos los locales</span>
+          <span class="ms-arrow">▾</span>
+        </div>
+        <div class="ms-dropdown" id="msCampanaDropdown" style="display:none">
+          <input class="ms-search" type="text" placeholder="Buscar..." oninput="filterMs('Campana',this.value)">
+          <div class="ms-select-all" onclick="selectAllMs('Campana')">
+            <input type="checkbox" id="msCampanaChkAll" style="width:14px;height:14px;accent-color:var(--verde)">
+            <span>Todos los locales</span>
+          </div>
+          <div class="ms-list" id="msCampanaList"></div>
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Fecha inicio</label><input type="date" id="campanaFechaDesde"></div>
+      <div class="form-group"><label>Fecha fin</label><input type="date" id="campanaFechaHasta"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Hora inicio</label><input type="time" id="campanaHoraDesde" value="00:00"></div>
+      <div class="form-group"><label>Hora fin</label><input type="time" id="campanaHoraHasta" value="23:59"></div>
+    </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="campanaActivo" checked style="width:auto"><label for="campanaActivo" style="text-transform:none;letter-spacing:0">Activa</label></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="cerrarModalCampana()">Cancelar</button>
+      <button class="btn-primary" onclick="guardarCampana()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar Pregunta -->
+<div class="modal-overlay" id="modalEditar">
+  <div class="modal">
+    <h3>✏️ Editar Pregunta</h3>
+    <input type="hidden" id="editId">
+    <div class="form-group"><label>Tipo</label>
+      <div class="tipo-selector" id="editTipoSelector">
+        <div class="tipo-btn" data-tipo="EMOJIS" onclick="selectTipoEdit(this)"><span class="tipo-icon">😊</span><span class="tipo-label">Emojis</span></div>
+        <div class="tipo-btn" data-tipo="CERRADA" onclick="selectTipoEdit(this)"><span class="tipo-icon">✅</span><span class="tipo-label">Sí/No</span></div>
+        <div class="tipo-btn" data-tipo="NUMERICA" onclick="selectTipoEdit(this)"><span class="tipo-icon">⭐</span><span class="tipo-label">Numérica</span></div>
+        <div class="tipo-btn" data-tipo="MULTIPLE" onclick="selectTipoEdit(this)"><span class="tipo-icon">☑️</span><span class="tipo-label">Múltiple</span></div>
+        <div class="tipo-btn" data-tipo="ABIERTA" onclick="selectTipoEdit(this)"><span class="tipo-icon">✍️</span><span class="tipo-label">Abierta</span></div>
+      </div>
+      <input type="hidden" id="editTipo" value="EMOJIS">
+    </div>
+    <div class="form-group"><label>Texto</label><textarea id="editPregunta"></textarea></div>
+    <div class="field-seleccion-multiple" id="editFieldSelMultiple"><input type="checkbox" id="editSelMultiple" style="width:auto"><label style="text-transform:none;letter-spacing:0;font-size:.88rem">Selección múltiple</label></div>
+    <div class="field-opciones" id="editFieldOpciones">
+      <div class="form-group"><label>Opciones</label>
+        <div class="opciones-editor" id="editOpcionesEditor"></div>
+        <button class="btn-add-opcion" onclick="addOpcionEdit()">+ Agregar</button>
+      </div>
+    </div>
+    <div class="form-group"><label>Modo</label><select id="editModo"><option value="ALEATORIA">Aleatoria</option><option value="FIJA">Fija</option></select></div>
+    <div class="form-row">
+      <div class="form-group"><label>Orden</label><input type="number" id="editOrden" min="0"></div>
+      <div class="form-group">
+        <label>Establecimientos</label>
+        <div class="ms-wrap" id="msEdit">
+          <div class="ms-input" id="msEditInput" onclick="toggleMs('Edit')">
+            <span class="ms-placeholder" id="msEditPlaceholder">Todos los locales</span>
+            <span class="ms-arrow">▾</span>
+          </div>
+          <div class="ms-dropdown" id="msEditDropdown" style="display:none">
+            <input class="ms-search" type="text" placeholder="Buscar..." oninput="filterMs('Edit',this.value)">
+            <div class="ms-select-all" onclick="selectAllMs('Edit')">
+              <input type="checkbox" id="msEditChkAll" style="width:14px;height:14px;accent-color:var(--verde)">
+              <span>Todos los locales</span>
+            </div>
+            <div class="ms-list" id="msEditList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="editActivo" style="width:auto"><label for="editActivo" style="text-transform:none;letter-spacing:0">Activa</label></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-primary" onclick="guardarEdicion()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+const API='http://localhost:3000/api', API_BANNER='http://localhost:3000/api/banner', API_ENC='http://localhost:3000/api/encuesta';
+let sets=[], bannerSets=[], campanas=[], bannerCampanas=[], preguntas=[], respuestasData=[];
+let todosEstablecimientos=[], msData=[];
+let msSelected={Nuevo:new Set(),Edit:new Set(),Set:new Set(),Campana:new Set()};
+let msFiltered={Nuevo:[],Edit:[],Set:[],Campana:[]};
+// ── TABS ──────────────────────────────────────────────────────
+function switchTab(name){
+  const names=['carrusel','banner','encuesta-config','encuesta-respuestas'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',names[i]===name));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='encuesta-config')cargarPreguntas();
+  if(name==='encuesta-respuestas'){cargarFiltros();setFechasDefault();}
+}
+function setFechasDefault(){const h=new Date().toISOString().split('T')[0],h30=new Date(Date.now()-30*86400000).toISOString().split('T')[0];if(!document.getElementById('filtroDesde').value)document.getElementById('filtroDesde').value=h30;if(!document.getElementById('filtroHasta').value)document.getElementById('filtroHasta').value=h;}
+
+// ── MULTISELECT ───────────────────────────────────────────────
+function renderMsChips(ctx){
+  const input=document.getElementById('ms'+ctx+'Input');
+  const ph=document.getElementById('ms'+ctx+'Placeholder');
+  input.querySelectorAll('.ms-chip').forEach(c=>c.remove());
+  if(!msSelected[ctx].size){ph.style.display='';return;}
+  ph.style.display='none';
+  msSelected[ctx].forEach(cod=>{
+    const e=msData.find(x=>x.establecimiento===cod);if(!e)return;
+    const chip=document.createElement('div');chip.className='ms-chip';
+    chip.innerHTML=`${e.nombre} <button onclick="msRemoveChip('${ctx}','${cod}',event)">✕</button>`;
+    input.insertBefore(chip,input.querySelector('.ms-arrow'));
+  });
+}
+function renderMsList(ctx){
+  const list=document.getElementById('ms'+ctx+'List');
+  if(!msFiltered[ctx].length){list.innerHTML='<div class="ms-none">Sin resultados</div>';return;}
+  list.innerHTML=msFiltered[ctx].map(e=>`<div class="ms-option ${msSelected[ctx].has(e.establecimiento)?'checked':''}" onclick="msToggle('${ctx}','${e.establecimiento}')"><input type="checkbox" ${msSelected[ctx].has(e.establecimiento)?'checked':''} readonly><span>${e.nombre} <span style="color:var(--muted);font-size:.7rem">(${e.establecimiento})</span></span></div>`).join('');
+  const allChk=document.getElementById('ms'+ctx+'ChkAll');
+  if(allChk)allChk.checked=msData.length>0&&msData.every(e=>msSelected[ctx].has(e.establecimiento));
+}
+function msToggle(ctx,cod){if(msSelected[ctx].has(cod))msSelected[ctx].delete(cod);else msSelected[ctx].add(cod);renderMsChips(ctx);renderMsList(ctx);}
+function msRemoveChip(ctx,cod,e){e.stopPropagation();msSelected[ctx].delete(cod);renderMsChips(ctx);renderMsList(ctx);}
+function selectAllMs(ctx){const all=msData.every(e=>msSelected[ctx].has(e.establecimiento));if(all)msSelected[ctx].clear();else msData.forEach(e=>msSelected[ctx].add(e.establecimiento));renderMsChips(ctx);renderMsList(ctx);}
+function filterMs(ctx,q){msFiltered[ctx]=msData.filter(e=>e.nombre.toLowerCase().includes(q.toLowerCase())||e.establecimiento.includes(q));renderMsList(ctx);}
+function toggleMs(ctx){const dd=document.getElementById('ms'+ctx+'Dropdown');const open=dd.style.display!=='none';dd.style.display=open?'none':'block';if(!open)renderMsList(ctx);}
+function getMsValue(ctx){return msSelected[ctx].size>0?[...msSelected[ctx]].join(','):null;}
+function setMsValue(ctx,valor){msSelected[ctx].clear();if(valor)valor.split(',').map(v=>v.trim()).forEach(v=>{if(v)msSelected[ctx].add(v);});renderMsChips(ctx);renderMsList(ctx);}
+function getMsArray(ctx){return msSelected[ctx].size>0?[...msSelected[ctx]]:[];}
+function setMsArray(ctx,arr){msSelected[ctx].clear();(arr||[]).forEach(v=>msSelected[ctx].add(v));renderMsChips(ctx);renderMsList(ctx);}
+
+document.addEventListener('click',e=>{
+  ['Nuevo','Edit','Set'].forEach(ctx=>{
+    const wrap=document.getElementById('ms'+ctx);
+    if(wrap&&!wrap.contains(e.target)){const dd=document.getElementById('ms'+ctx+'Dropdown');if(dd)dd.style.display='none';}
+  });
+});
+
+async function cargarEstablecimientos(){
+  try{const res=await fetch(API+'/establecimientos');todosEstablecimientos=await res.json();msData=todosEstablecimientos;
+  ['Nuevo','Edit','Set','Campana'].forEach(ctx=>{msFiltered[ctx]=[...msData];});}
+  catch(e){console.error('Error establecimientos:',e);}
+}
+
+// ── CARRUSEL SETS ─────────────────────────────────────────────
+async function initCarrusel(){
+  try{const r=await fetch(API+'/data');const d=await r.json();
+  sets=d.sets||[];applyConfig(d.config||{});renderSets();
+  campanas=d.campanas||[];renderCampanas();}
+  catch(e){showToast('❌ No se pudo conectar');}
+}
+
+function applyConfig(cfg){
+  if(cfg.duration)document.getElementById('cfgDuration').value=cfg.duration;
+  if(cfg.fit)document.getElementById('cfgFit').value=cfg.fit;
+  if(cfg.timeStart)document.getElementById('cfgTimeStart').value=cfg.timeStart;
+  if(cfg.timeEnd)document.getElementById('cfgTimeEnd').value=cfg.timeEnd;
+  if(cfg.days)document.querySelectorAll('.day-pill').forEach(p=>p.classList.toggle('active',cfg.days.includes(parseInt(p.dataset.day))));
+}
+
+function renderSets(){
+  const el=document.getElementById('setsList');
+  if(!sets.length){el.innerHTML='<div class="empty-state">📭 No hay sets creados. Crea uno para empezar.</div>';return;}
+  el.innerHTML=sets.map(s=>{
+    const esGlobal=!s.establecimientos||s.establecimientos.length===0;
+    const nombresEst=esGlobal?'Todos los locales':s.establecimientos.map(cod=>{const e=todosEstablecimientos.find(x=>x.establecimiento===cod);return e?e.nombre:cod;}).join(', ');
+    return`<div class="set-card">
+      <div class="set-header">
+        <div>
+          <div class="set-title">${s.nombre||'Sin nombre'}</div>
+          <div class="set-meta">
+            ${!s.activo?'<span class="badge-inactivo">Inactivo</span>':(esGlobal?'<span class="badge-global">🌐 Global</span>':'<span class="badge-local">📍 Local</span>')}
+            <span>${nombresEst}</span>
+            <span>${(s.images||[]).length} imágenes</span>
+          </div>
+        </div>
+        <div class="set-actions">
+          <button class="btn-secondary" style="padding:4px 10px;font-size:.75rem" onclick="editarSet('carrusel',${s.id})">✏️</button>
+          <button class="btn-danger-sm" onclick="eliminarSet('carrusel',${s.id})">🗑</button>
+        </div>
+      </div>
+      <div class="set-images">
+        ${(s.images||[]).map(img=>`<div class="set-img"><img src="${img.url}"><button class="del-img" onclick="eliminarImagenSet('carrusel',${s.id},'${img.file}')">✕</button></div>`).join('')}
+        <div class="upload-set"><input type="file" accept="image/*" multiple onchange="subirImagenesSet('carrusel',${s.id},this.files)">+ Imágenes</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function guardarConfig(){
+  const cfg={duration:parseInt(document.getElementById('cfgDuration').value)||5,fit:document.getElementById('cfgFit').value,timeStart:document.getElementById('cfgTimeStart').value,timeEnd:document.getElementById('cfgTimeEnd').value,days:[...document.querySelectorAll('.day-pill.active')].map(p=>parseInt(p.dataset.day))};
+  await fetch(API+'/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)});
+  showToast('✅ Configuración guardada');
+}
+
+// ── BANNER SETS ───────────────────────────────────────────────
+async function initBanner(){
+  try{const r=await fetch(API_BANNER+'/data');const d=await r.json();
+  bannerSets=d.sets||[];applyBannerConfig(d.config||{});renderBannerSets();
+  bannerCampanas=d.campanas||[];renderBannerCampanas();}
+  catch(e){showToast('❌ Error banner');}
+}
+function applyBannerConfig(cfg){if(cfg.duration)document.getElementById('bannerCfgDuration').value=cfg.duration;if(cfg.fit)document.getElementById('bannerCfgFit').value=cfg.fit;}
+async function guardarConfigBanner(){const cfg={duration:parseInt(document.getElementById('bannerCfgDuration').value)||8,fit:document.getElementById('bannerCfgFit').value};await fetch(API_BANNER+'/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)});showToast('✅ Guardado');}
+
+function renderBannerSets(){
+  const el=document.getElementById('bannerSetsList');
+  if(!bannerSets.length){el.innerHTML='<div class="empty-state">📭 No hay sets creados.</div>';return;}
+  el.innerHTML=bannerSets.map(s=>{
+    const esGlobal=!s.establecimientos||s.establecimientos.length===0;
+    const nombresEst=esGlobal?'Todos los locales':s.establecimientos.map(cod=>{const e=todosEstablecimientos.find(x=>x.establecimiento===cod);return e?e.nombre:cod;}).join(', ');
+    return`<div class="set-card">
+      <div class="set-header">
+        <div>
+          <div class="set-title">${s.nombre||'Sin nombre'}</div>
+          <div class="set-meta">
+            ${!s.activo?'<span class="badge-inactivo">Inactivo</span>':(esGlobal?'<span class="badge-global">🌐 Global</span>':'<span class="badge-local">📍 Local</span>')}
+            <span>${nombresEst}</span>
+            <span>${(s.images||[]).length} imágenes</span>
+          </div>
+        </div>
+        <div class="set-actions">
+          <button class="btn-secondary" style="padding:4px 10px;font-size:.75rem" onclick="editarSet('banner',${s.id})">✏️</button>
+          <button class="btn-danger-sm" onclick="eliminarSet('banner',${s.id})">🗑</button>
+        </div>
+      </div>
+      <div class="set-images">
+        ${(s.images||[]).map(img=>`<div class="set-img"><img src="${img.url}"><button class="del-img" onclick="eliminarImagenSet('banner',${s.id},'${img.file}')">✕</button></div>`).join('')}
+        <div class="upload-set"><input type="file" accept="image/*" multiple onchange="subirImagenesSet('banner',${s.id},this.files)">+ Imágenes</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── MODAL SET ────────────────────────────────────────────────
+function abrirModalSet(ctx){
+  document.getElementById('setCtx').value=ctx;
+  document.getElementById('setEditId').value='';
+  document.getElementById('setNombre').value='';
+  document.getElementById('setActivo').checked=true;
+  document.getElementById('modalSetTitulo').textContent='🖼️ Nuevo Set de Imágenes';
+  setMsArray('Set',[]);
+  renderMsList('Set');
+  document.getElementById('modalSet').classList.add('show');
+}
+function editarSet(ctx,id){
+  const arr=ctx==='carrusel'?sets:bannerSets;
+  const s=arr.find(x=>x.id==id);if(!s)return;
+  document.getElementById('setCtx').value=ctx;
+  document.getElementById('setEditId').value=s.id;
+  document.getElementById('setNombre').value=s.nombre||'';
+  document.getElementById('setActivo').checked=!!s.activo;
+  document.getElementById('modalSetTitulo').textContent='✏️ Editar Set';
+  setMsArray('Set',s.establecimientos||[]);
+  renderMsList('Set');
+  document.getElementById('modalSet').classList.add('show');
+}
+async function guardarSet(){
+  const ctx=document.getElementById('setCtx').value;
+  const editId=document.getElementById('setEditId').value;
+  const body={nombre:document.getElementById('setNombre').value,activo:document.getElementById('setActivo').checked,establecimientos:getMsArray('Set')};
+  const baseUrl=ctx==='carrusel'?API+'/sets':API_BANNER+'/sets';
+  if(editId){await fetch(baseUrl+'/'+editId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});}
+  else{await fetch(baseUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});}
+  cerrarModalSet();showToast('✅ Set guardado');
+  if(ctx==='carrusel')initCarrusel();else initBanner();
+}
+async function eliminarSet(ctx,id){
+  if(!confirm('¿Eliminar este set? Se perderán las imágenes.'))return;
+  const url=ctx==='carrusel'?API+'/sets/'+id:API_BANNER+'/sets/'+id;
+  await fetch(url,{method:'DELETE'});showToast('🗑 Set eliminado');
+  if(ctx==='carrusel')initCarrusel();else initBanner();
+}
+async function subirImagenesSet(ctx,id,files){
+  const form=new FormData();Array.from(files).forEach(f=>{if(f.type.startsWith('image/'))form.append('images',f);});
+  if(!form.has('images'))return;
+  const url=ctx==='carrusel'?`${API}/sets/${id}/upload`:`${API_BANNER}/sets/${id}/upload`;
+  showToast('⏳ Subiendo...');await fetch(url,{method:'POST',body:form});
+  showToast('✅ Imágenes agregadas');if(ctx==='carrusel')initCarrusel();else initBanner();
+}
+async function eliminarImagenSet(ctx,id,file){
+  const url=ctx==='carrusel'?`${API}/sets/${id}/image/${file}`:`${API_BANNER}/sets/${id}/image/${file}`;
+  await fetch(url,{method:'DELETE'});showToast('🗑 Imagen eliminada');
+  if(ctx==='carrusel')initCarrusel();else initBanner();
+}
+function cerrarModalSet(){document.getElementById('modalSet').classList.remove('show');}
+
+// ── CAMPAÑAS ──────────────────────────────────────────────────
+function estadoCampana(c){const ahora=new Date();const desde=new Date(c.fecha_desde+'T'+(c.hora_desde||'00:00'));const hasta=new Date(c.fecha_hasta+'T'+(c.hora_hasta||'23:59'));if(!c.activo)return'<span class="badge-inactiva">Inactiva</span>';if(ahora<desde)return'<span class="badge-futura">Futura</span>';if(ahora>hasta)return'<span class="badge-expirada">Expirada</span>';return'<span class="badge-activa">🟢 Activa</span>';}
+function _renderCampanas(arr,elId,ctx){
+  const el=document.getElementById(elId);
+  if(!arr.length){el.innerHTML='<div style="color:var(--muted);font-size:.85rem;padding:8px 0">No hay campañas.</div>';return;}
+  el.innerHTML=arr.map(c=>`<div class="campana-card"><div class="campana-header"><div><div class="campana-title">${c.nombre||'Sin nombre'} ${estadoCampana(c)}</div><div class="campana-dates">📅 ${c.fecha_desde} ${c.hora_desde} → ${c.fecha_hasta} ${c.hora_hasta}</div></div><div style="display:flex;gap:6px"><button class="btn-secondary" style="padding:4px 10px;font-size:.75rem" onclick="editarCampana('${ctx}',${c.id})">✏️</button><button class="btn-danger-sm" onclick="eliminarCampana('${ctx}',${c.id})">🗑</button></div></div><div class="campana-images">${(c.images||[]).map(img=>`<div class="campana-img"><img src="${img.url}"><button class="del-img" onclick="eliminarImagenCampana('${ctx}',${c.id},'${img.file}')">✕</button></div>`).join('')}<div class="upload-campana"><input type="file" accept="image/*" multiple onchange="subirImagenesCampana('${ctx}',${c.id},this.files)">+ Imágenes</div></div></div>`).join('');
+}
+function renderCampanas(){_renderCampanas(campanas,'campanasList','carrusel');}
+function renderBannerCampanas(){_renderCampanas(bannerCampanas,'bannerCampanasList','banner');}
+function abrirModalCampana(ctx){
+  document.getElementById('campanaCtx').value=ctx;
+  document.getElementById('campanaEditId').value='';
+  document.getElementById('campanaNombre').value='';
+  document.getElementById('campanaFechaDesde').value='';
+  document.getElementById('campanaFechaHasta').value='';
+  document.getElementById('campanaHoraDesde').value='00:00';
+  document.getElementById('campanaHoraHasta').value='23:59';
+  document.getElementById('campanaActivo').checked=true;
+  document.getElementById('modalCampanaTitulo').textContent='🌟 Nueva Campaña Especial';
+  setMsArray('Campana',[]); // ← limpiar selección
+  document.getElementById('modalCampana').classList.add('show');
+}
+
+function editarCampana(ctx,id){
+  const arr=ctx==='carrusel'?campanas:bannerCampanas;
+  const c=arr.find(x=>x.id==id); if(!c)return;
+  document.getElementById('campanaCtx').value=ctx;
+  document.getElementById('campanaEditId').value=c.id;
+  document.getElementById('campanaNombre').value=c.nombre||'';
+  document.getElementById('campanaFechaDesde').value=c.fecha_desde||'';
+  document.getElementById('campanaFechaHasta').value=c.fecha_hasta||'';
+  document.getElementById('campanaHoraDesde').value=c.hora_desde||'00:00';
+  document.getElementById('campanaHoraHasta').value=c.hora_hasta||'23:59';
+  document.getElementById('campanaActivo').checked=!!c.activo;
+  document.getElementById('modalCampanaTitulo').textContent='✏️ Editar Campaña';
+  setMsArray('Campana', c.establecimientos||[]); // ← restaurar selección
+  document.getElementById('modalCampana').classList.add('show');
+}
+async function guardarCampana(){
+  const ctx=document.getElementById('campanaCtx').value;
+  const editId=document.getElementById('campanaEditId').value;
+  const body={
+    nombre:document.getElementById('campanaNombre').value,
+    fecha_desde:document.getElementById('campanaFechaDesde').value,
+    fecha_hasta:document.getElementById('campanaFechaHasta').value,
+    hora_desde:document.getElementById('campanaHoraDesde').value,
+    hora_hasta:document.getElementById('campanaHoraHasta').value,
+    activo:document.getElementById('campanaActivo').checked,
+    establecimientos: getMsArray('Campana') // ← agregar esto
+  };
+  const baseUrl=ctx==='carrusel'?API+'/campanas':API_BANNER+'/campanas';
+  if(editId){await fetch(baseUrl+'/'+editId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});}
+  else{await fetch(baseUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});}
+  cerrarModalCampana();showToast('✅ Campaña guardada');
+  if(ctx==='carrusel')initCarrusel();else initBanner();
+}
+async function eliminarCampana(ctx,id){if(!confirm('¿Eliminar campaña?'))return;const url=ctx==='carrusel'?API+'/campanas/'+id:API_BANNER+'/campanas/'+id;await fetch(url,{method:'DELETE'});showToast('🗑 Eliminada');if(ctx==='carrusel')initCarrusel();else initBanner();}
+async function subirImagenesCampana(ctx,id,files){const form=new FormData();Array.from(files).forEach(f=>{if(f.type.startsWith('image/'))form.append('images',f);});if(!form.has('images'))return;const url=ctx==='carrusel'?`${API}/campanas/${id}/upload`:`${API_BANNER}/campanas/${id}/upload`;showToast('⏳ Subiendo...');await fetch(url,{method:'POST',body:form});showToast('✅ Imágenes agregadas');if(ctx==='carrusel')initCarrusel();else initBanner();}
+async function eliminarImagenCampana(ctx,id,file){const url=ctx==='carrusel'?`${API}/campanas/${id}/image/${file}`:`${API_BANNER}/campanas/${id}/image/${file}`;await fetch(url,{method:'DELETE'});showToast('🗑 Imagen eliminada');if(ctx==='carrusel')initCarrusel();else initBanner();}
+function cerrarModalCampana(){document.getElementById('modalCampana').classList.remove('show');}
+
+// ── ENCUESTA PREGUNTAS ────────────────────────────────────────
+const tipoLabels={EMOJIS:'😊 Emojis',CERRADA:'✅ Sí/No',NUMERICA:'⭐ Numérica',MULTIPLE:'☑️ Múltiple',ABIERTA:'✍️ Abierta'};
+function getNombreEstablecimientos(codigos){if(!codigos)return'Todos';return codigos.split(',').map(cod=>{const est=todosEstablecimientos.find(e=>e.establecimiento===cod.trim());return est?est.nombre:cod.trim();}).join(', ');}
+function selectTipo(btn){document.querySelectorAll('.tipo-selector:not(#editTipoSelector) .tipo-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');const tipo=btn.dataset.tipo;document.getElementById('nuevoTipo').value=tipo;document.getElementById('fieldOpciones').classList.toggle('show',tipo==='MULTIPLE');document.getElementById('fieldSelMultiple').classList.toggle('show',tipo==='MULTIPLE');}
+function selectTipoEdit(btn){document.querySelectorAll('#editTipoSelector .tipo-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');const tipo=btn.dataset.tipo;document.getElementById('editTipo').value=tipo;document.getElementById('editFieldOpciones').classList.toggle('show',tipo==='MULTIPLE');document.getElementById('editFieldSelMultiple').classList.toggle('show',tipo==='MULTIPLE');}
+function addOpcion(){const ed=document.getElementById('opcionesEditor');const n=ed.querySelectorAll('.opcion-row').length+1;const row=document.createElement('div');row.className='opcion-row';row.innerHTML=`<input type="text" placeholder="Opción ${n}"><button class="btn-del-opcion" onclick="delOpcion(this)">✕</button>`;ed.appendChild(row);}
+function addOpcionEdit(){const ed=document.getElementById('editOpcionesEditor');const n=ed.querySelectorAll('.opcion-row').length+1;const row=document.createElement('div');row.className='opcion-row';row.innerHTML=`<input type="text" placeholder="Opción ${n}"><button class="btn-del-opcion" onclick="delOpcion(this)">✕</button>`;ed.appendChild(row);}
+function delOpcion(btn){const row=btn.parentElement;if(row.parentElement.querySelectorAll('.opcion-row').length>1)row.remove();}
+function getOpciones(editorId){return[...document.getElementById(editorId).querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);}
+function setOpciones(editorId,opciones){const ed=document.getElementById(editorId);ed.innerHTML='';(opciones||[]).forEach((op,i)=>{const row=document.createElement('div');row.className='opcion-row';row.innerHTML=`<input type="text" value="${op}" placeholder="Opción ${i+1}"><button class="btn-del-opcion" onclick="delOpcion(this)">✕</button>`;ed.appendChild(row);});if(!opciones||!opciones.length)addOpcionEdit();}
+
+async function cargarPreguntas(){
+  try{const r=await fetch(API_ENC+'/preguntas');preguntas=await r.json();const list=document.getElementById('preguntasList');
+  if(!preguntas.length){list.innerHTML='<div class="empty-state">❓ No hay preguntas.</div>';return;}
+  list.innerHTML=preguntas.map((p,i)=>{let ops='';if(p.tipo==='MULTIPLE'&&p.opciones){try{const o=JSON.parse(p.opciones);ops=`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">${o.map(x=>`<span style="background:#f0faf5;border:1px solid #c8ead8;border-radius:20px;padding:2px 10px;font-size:.7rem">${x}</span>`).join('')}</div>`;}catch(e){}}
+  return`<div class="pregunta-card"><div class="pq-num">${i+1}</div><div class="pq-body"><div class="pq-texto">${p.pregunta}</div><div class="pq-meta"><span class="tipo-badge tipo-${p.tipo||'EMOJIS'}">${tipoLabels[p.tipo]||p.tipo}</span><span class="badge-modo ${p.modo==='FIJA'?'badge-fija':'badge-aleatoria'}">${p.modo}</span><span class="badge-modo ${p.activo?'badge-activo':'badge-inactivo2'}">${p.activo?'Activa':'Inactiva'}</span><span>📍 ${getNombreEstablecimientos(p.establecimiento)}</span>${p.seleccion_multiple?'<span>🔲 Multi</span>':''}</div>${ops}<div class="pq-actions"><button class="btn-secondary" onclick="abrirEditar(${p.id})">✏️ Editar</button><button class="btn-danger-sm" onclick="eliminarPregunta(${p.id})">🗑</button></div></div></div>`;}).join('');}
+  catch(e){document.getElementById('preguntasList').innerHTML=`<div class="empty-state">❌ Error: ${e.message}</div>`;}
+}
+
+async function crearPregunta(){
+  const pregunta=document.getElementById('nuevaPregunta').value.trim();if(!pregunta){showToast('❌ Ingresa el texto');return;}
+  const tipo=document.getElementById('nuevoTipo').value;let opciones=null;
+  if(tipo==='MULTIPLE'){const ops=getOpciones('opcionesEditor');if(!ops.length){showToast('❌ Agrega opciones');return;}opciones=JSON.stringify(ops);}
+  await fetch(API_ENC+'/preguntas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pregunta,tipo,activo:document.getElementById('nuevoActivo').checked,orden:parseInt(document.getElementById('nuevoOrden').value)||0,modo:document.getElementById('nuevaModo').value,establecimiento:getMsValue('Nuevo'),opciones,seleccion_multiple:tipo==='MULTIPLE'&&document.getElementById('nuevoSelMultiple').checked})});
+  document.getElementById('nuevaPregunta').value='';setMsValue('Nuevo',null);cargarPreguntas();showToast('✅ Pregunta agregada');
+}
+
+async function abrirEditar(id){
+  const p=preguntas.find(x=>x.id===id);if(!p)return;
+  document.getElementById('editId').value=p.id;
+  document.getElementById('editPregunta').value=p.pregunta;
+  document.getElementById('editModo').value=p.modo||'ALEATORIA';
+  document.getElementById('editOrden').value=p.orden||0;
+  document.getElementById('editActivo').checked=!!p.activo;
+  const tipo=p.tipo||'EMOJIS';
+  document.getElementById('editTipo').value=tipo;
+  document.querySelectorAll('#editTipoSelector .tipo-btn').forEach(b=>b.classList.toggle('selected',b.dataset.tipo===tipo));
+  document.getElementById('editFieldOpciones').classList.toggle('show',tipo==='MULTIPLE');
+  document.getElementById('editFieldSelMultiple').classList.toggle('show',tipo==='MULTIPLE');
+  document.getElementById('editSelMultiple').checked=!!p.seleccion_multiple;
+  let ops=[];try{if(p.opciones)ops=JSON.parse(p.opciones);}catch(e){}
+  setOpciones('editOpcionesEditor',ops);
+  setMsValue('Edit',p.establecimiento);
+  document.getElementById('modalEditar').classList.add('show');
+}
+
+async function guardarEdicion(){
+  const id=document.getElementById('editId').value;const tipo=document.getElementById('editTipo').value;let opciones=null;
+  if(tipo==='MULTIPLE'){const ops=getOpciones('editOpcionesEditor');if(!ops.length){showToast('❌ Agrega opciones');return;}opciones=JSON.stringify(ops);}
+  await fetch(API_ENC+'/preguntas/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({pregunta:document.getElementById('editPregunta').value,tipo,activo:document.getElementById('editActivo').checked,orden:parseInt(document.getElementById('editOrden').value)||0,modo:document.getElementById('editModo').value,establecimiento:getMsValue('Edit'),opciones,seleccion_multiple:tipo==='MULTIPLE'&&document.getElementById('editSelMultiple').checked})});
+  cerrarModal();cargarPreguntas();showToast('✅ Actualizada');
+}
+
+async function eliminarPregunta(id){if(!confirm('¿Eliminar?'))return;await fetch(API_ENC+'/preguntas/'+id,{method:'DELETE'});cargarPreguntas();showToast('🗑 Eliminada');}
+function cerrarModal(){document.getElementById('modalEditar').classList.remove('show');}
+
+// ── RESPUESTAS ────────────────────────────────────────────────
+async function cargarFiltros(){
+  try{const[ests,pqs]=await Promise.all([fetch(API_ENC+'/establecimientos').then(r=>r.json()),fetch(API_ENC+'/preguntas').then(r=>r.json())]);
+  const selEst=document.getElementById('filtroEst');selEst.innerHTML='<option value="">Todos</option>';
+  ests.forEach(e=>{const o=document.createElement('option');o.value=e.establecimiento;o.textContent=e.nombre+' ('+e.establecimiento+')';selEst.appendChild(o);});
+  const selPq=document.getElementById('filtroPregunta');selPq.innerHTML='<option value="">Todas</option>';
+  pqs.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=(p.pregunta||'').substring(0,50)+(p.pregunta&&p.pregunta.length>50?'...':'');selPq.appendChild(o);});}
+  catch(e){}
+}
+async function buscarRespuestas(){
+  const params=new URLSearchParams();
+  const desde=document.getElementById('filtroDesde').value;if(desde)params.append('desde',desde);
+  const hasta=document.getElementById('filtroHasta').value;if(hasta)params.append('hasta',hasta);
+  const est=document.getElementById('filtroEst').value;if(est)params.append('establecimiento',est);
+  const pq=document.getElementById('filtroPregunta').value;if(pq)params.append('pregunta',pq);
+  try{const r=await fetch(API_ENC+'/respuestas?'+params);respuestasData=await r.json();
+  const total=respuestasData.length;
+  const nums=respuestasData.filter(r=>typeof r.calificacion==='number');
+  const prom=nums.length>0?(nums.reduce((a,r)=>a+r.calificacion,0)/nums.length).toFixed(1):'-';
+  document.getElementById('totalRespuestas').textContent=total;document.getElementById('promedioCalif').textContent=prom;document.getElementById('statsRespuestas').style.display='grid';
+  const tbody=document.getElementById('tbodyRespuestas');
+  if(!total){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px">Sin resultados</td></tr>';return;}
+  const emojis=['','😡','😟','😐','😊','😄'];
+  tbody.innerHTML=respuestasData.map(r=>{
+    let resp=r.descripcion||'-';
+    if(r.calificacion!==null&&r.calificacion!==undefined){
+      if(r.tipo==='EMOJIS'&&r.calificacion>=1&&r.calificacion<=5)resp=`<span class="cal-badge cal-${r.calificacion}">${emojis[r.calificacion]} ${r.calificacion}</span>`;
+      else if(r.tipo==='NUMERICA')resp=`⭐ ${r.calificacion}`;
+      else if(r.tipo==='CERRADA')resp=r.calificacion===1?'✅ Sí':'❌ No';
+    }
+    const nombreLocal=r.nombre_establecimiento||r.establecimiento||'-';
+    return`<tr><td>${new Date(r.fecha).toLocaleDateString('es-EC')} ${new Date(r.fecha).toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'})}</td><td>${r.numero_factura||'-'}</td><td><div style="font-weight:500">${r.nombre_cliente||'-'}</div><div style="font-size:.7rem;color:var(--muted)">${r.identificacion||''}</div></td><td><div style="font-weight:500">${nombreLocal}</div><div style="font-size:.7rem;color:var(--muted)">${r.establecimiento||''}</div></td><td>${r.pto_emision||'-'}</td><td>${r.cajero||'-'}</td><td style="max-width:150px;white-space:normal;font-size:.75rem">${r.pregunta_texto||'-'}</td><td><span class="tipo-badge tipo-${r.tipo||'EMOJIS'}">${tipoLabels[r.tipo]||'-'}</span></td><td>${resp}</td></tr>`;
+  }).join('');}
+  catch(e){showToast('❌ Error: '+e.message);}
+}
+function exportarCSV(){if(!respuestasData.length){showToast('❌ Primero busca');return;}const headers=['Fecha','Factura','Identificacion','Cliente','Local','Cod.Local','POS','Cajero','Pregunta','Tipo','Respuesta'];const rows=respuestasData.map(r=>[new Date(r.fecha).toLocaleString('es-EC'),r.numero_factura||'',r.identificacion||'',r.nombre_cliente||'',r.nombre_establecimiento||r.establecimiento||'',r.establecimiento||'',r.pto_emision||'',r.cajero||'',(r.pregunta_texto||'').replace(/,/g,';'),r.tipo||'',r.descripcion||''].map(v=>`"${v}"`).join(','));const csv=[headers.join(','),...rows].join('\n');const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='encuesta_'+new Date().toISOString().split('T')[0]+'.csv';a.click();}
+
+// ── UTILS ─────────────────────────────────────────────────────
+function copyUrl(url){navigator.clipboard.writeText(url);showToast('📋 Copiada');}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+
+document.querySelectorAll('.day-pill').forEach(p=>p.addEventListener('click',()=>p.classList.toggle('active')));
+document.getElementById('modalEditar').addEventListener('click',e=>{if(e.target===document.getElementById('modalEditar'))cerrarModal();});
+document.getElementById('modalCampana').addEventListener('click',e=>{if(e.target===document.getElementById('modalCampana'))cerrarModalCampana();});
+document.getElementById('modalSet').addEventListener('click',e=>{if(e.target===document.getElementById('modalSet'))cerrarModalSet();});
+
+// Inicio
+cargarEstablecimientos().then(()=>{initCarrusel();initBanner();});
+</script>
+</body>
+</html>

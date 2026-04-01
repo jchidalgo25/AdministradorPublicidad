@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>Banner POS</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body,html{width:100%;height:100%;overflow:hidden;background:#006633;}
+  #container{position:relative;width:100vw;height:100vh;background:#006633;}
+  .slide{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;transition:opacity 0.8s ease;}
+  .slide.active{opacity:1;z-index:2;}
+  .slide img{width:100%;height:100%;object-fit:contain;display:block;}
+  #noImages{display:none;position:fixed;inset:0;background:#004d26;align-items:center;justify-content:center;color:#fff;font-family:Arial,sans-serif;}
+  #noImages.show{display:flex;}
+  #badge{position:fixed;top:10px;right:10px;background:rgba(255,200,0,0.85);color:#333;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;padding:4px 10px;border-radius:20px;display:none;z-index:200;}
+</style>
+</head>
+<body>
+<div id="noImages"><h2 style="opacity:.5;font-weight:300;font-size:1rem">Sin imágenes configuradas</h2></div>
+<div id="container"></div>
+<div id="badge">⭐ CAMPAÑA ESPECIAL</div>
+<script>
+  function getEst() {
+    var params = window.location.search;
+    var match = params.match(/[?&]est=([^&]*)/);
+    return match ? decodeURIComponent(match[1]) : '';
+  }
+
+  var EST = getEst();
+  var API = 'http://localhost:3000/api/banner';
+  var images = [], config = {duration:8,fit:'contain'}, current=0, timer=null, lastHash='';
+
+  function loadData(callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', API+'/imagenes?est='+EST, true);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState===4 && xhr.status===200) {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          images = data.images||[];
+          if (data.config) { config.duration=parseInt(data.config.duration)||8; config.fit=data.config.fit||'contain'; }
+          var badge = document.getElementById('badge');
+          badge.style.display = data.campaña ? 'block' : 'none';
+          if (data.campaña) badge.textContent = '⭐ ' + data.campaña;
+          lastHash = JSON.stringify(images);
+        } catch(e) {}
+      }
+      if (callback) callback();
+    };
+    xhr.send();
+  }
+
+  function buildSlides() {
+    var container=document.getElementById('container'); container.innerHTML='';
+    for (var i=0;i<images.length;i++) {
+      var slide=document.createElement('div'); slide.className='slide'+(i===0?' active':''); slide.id='slide_'+i;
+      var img=document.createElement('img'); img.src=images[i].url; img.style.objectFit=config.fit;
+      slide.appendChild(img); container.appendChild(slide);
+    }
+  }
+
+  function showSlide(index) {
+    var slides=document.getElementsByClassName('slide');
+    for (var i=0;i<slides.length;i++) slides[i].className='slide';
+    var el=document.getElementById('slide_'+index); if(el) el.className='slide active';
+  }
+
+  function nextSlide() { if(!images.length)return; current=(current+1)%images.length; showSlide(current); }
+  function startCarousel() { if(timer)clearInterval(timer); current=0; showSlide(0); if(images.length>1) timer=setInterval(nextSlide,config.duration*1000); }
+  function stopCarousel() { if(timer){clearInterval(timer);timer=null;} }
+
+  function render() {
+    var noImages=document.getElementById('noImages');
+    if (!images.length) { stopCarousel(); noImages.className='show'; return; }
+    noImages.className=''; buildSlides(); startCarousel();
+  }
+
+  function checkUpdates() {
+    var xhr=new XMLHttpRequest(); xhr.open('GET',API+'/imagenes?est='+EST,true);
+    xhr.onreadystatechange=function() {
+      if (xhr.readyState===4&&xhr.status===200) {
+        try {
+          var data=JSON.parse(xhr.responseText);
+          var newHash=JSON.stringify(data.images||[]);
+          if (newHash!==lastHash) { stopCarousel(); loadData(render); }
+          var badge=document.getElementById('badge');
+          badge.style.display=data.campaña?'block':'none';
+          if(data.campaña)badge.textContent='⭐ '+data.campaña;
+        } catch(e) {}
+      }
+    };
+    xhr.send();
+  }
+
+  loadData(render);
+  setInterval(checkUpdates,15000);
+</script>
+</body>
+</html>

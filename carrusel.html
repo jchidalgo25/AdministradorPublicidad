@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>Carrusel POS</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body,html{width:100%;height:100%;overflow:hidden;background:#000;}
+  #container{position:relative;width:100vw;height:100vh;background:#000;}
+  .slide{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;transition:opacity 0.8s ease;}
+  .slide.active{opacity:1;z-index:2;}
+  .slide img{width:100%;height:100%;object-fit:cover;display:block;}
+  #progressBar{position:fixed;bottom:0;left:0;height:4px;background:#00a352;width:0;z-index:100;}
+  #noImages{display:none;position:fixed;inset:0;background:#001a0d;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-family:Arial,sans-serif;text-align:center;}
+  #noImages.show{display:flex;}
+  #offhours{display:none;position:fixed;inset:0;background:#000d06;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-family:Arial,sans-serif;text-align:center;}
+  #offhours.show{display:flex;}
+  #offhours h2{font-size:1.2rem;opacity:.5;font-weight:300;}
+  #badge{position:fixed;top:10px;right:10px;background:rgba(255,200,0,0.85);color:#333;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;padding:4px 10px;border-radius:20px;display:none;z-index:200;}
+</style>
+</head>
+<body>
+<div id="noImages"><h2 style="opacity:.6;font-weight:300;font-size:1.4rem">No hay imágenes configuradas</h2></div>
+<div id="offhours"><h2>🌙 Fuera de horario de publicidad</h2></div>
+<div id="container"></div>
+<div id="progressBar"></div>
+<div id="badge">⭐ CAMPAÑA ESPECIAL</div>
+<script>
+  // Leer establecimiento de la URL: carrusel.html?est=055
+  function getEst() {
+    var params = window.location.search;
+    var match = params.match(/[?&]est=([^&]*)/);
+    return match ? decodeURIComponent(match[1]) : '';
+  }
+
+  var EST = getEst();
+  var API = 'http://localhost:3000/api';
+  var images = [];
+  var config = { duration:5, fit:'cover', days:[1,2,3,4,5], timeStart:'08:00', timeEnd:'21:00' };
+  var current = 0, timer = null, progTimer = null, lastHash = '';
+
+  function loadData(callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', API + '/imagenes?est=' + EST, true);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          images = data.images || [];
+          if (data.config) {
+            config.duration  = parseInt(data.config.duration)  || 5;
+            config.fit       = data.config.fit       || 'cover';
+            config.days      = data.config.days      || [1,2,3,4,5];
+            config.timeStart = data.config.timeStart || '08:00';
+            config.timeEnd   = data.config.timeEnd   || '21:00';
+          }
+          var badge = document.getElementById('badge');
+          badge.style.display = data.campaña ? 'block' : 'none';
+          if (data.campaña) badge.textContent = '⭐ ' + data.campaña;
+          lastHash = JSON.stringify(images);
+        } catch(e) {}
+      }
+      if (callback) callback();
+    };
+    xhr.send();
+  }
+
+  function dentroDeHorario() {
+    var now = new Date();
+    var day = now.getDay();
+    var found = false;
+    for (var i = 0; i < config.days.length; i++) { if (config.days[i] === day) { found = true; break; } }
+    if (!found) return false;
+    var p1 = config.timeStart.split(':'), p2 = config.timeEnd.split(':');
+    var nowMin = now.getHours()*60+now.getMinutes();
+    return nowMin >= parseInt(p1[0])*60+parseInt(p1[1]) && nowMin < parseInt(p2[0])*60+parseInt(p2[1]);
+  }
+
+  function buildSlides() {
+    var container = document.getElementById('container');
+    container.innerHTML = '';
+    for (var i = 0; i < images.length; i++) {
+      var slide = document.createElement('div');
+      slide.className = 'slide' + (i===0?' active':'');
+      slide.id = 'slide_'+i;
+      var img = document.createElement('img');
+      img.src = images[i].url;
+      img.style.objectFit = config.fit;
+      slide.appendChild(img);
+      container.appendChild(slide);
+    }
+  }
+
+  function showSlide(index) {
+    var slides = document.getElementsByClassName('slide');
+    for (var i = 0; i < slides.length; i++) slides[i].className = 'slide';
+    var el = document.getElementById('slide_'+index);
+    if (el) el.className = 'slide active';
+    animateProgress(config.duration*1000);
+  }
+
+  function animateProgress(ms) {
+    if (progTimer) clearInterval(progTimer);
+    var bar = document.getElementById('progressBar');
+    bar.style.width = '0%';
+    var start = new Date().getTime();
+    progTimer = setInterval(function() {
+      var pct = Math.min(((new Date().getTime()-start)/ms)*100, 100);
+      bar.style.width = pct+'%';
+      if (pct >= 100) clearInterval(progTimer);
+    }, 50);
+  }
+
+  function nextSlide() { if (!images.length) return; current=(current+1)%images.length; showSlide(current); }
+  function startCarousel() { if(timer)clearInterval(timer); current=0; showSlide(0); if(images.length>1) timer=setInterval(nextSlide,config.duration*1000); }
+  function stopCarousel() { if(timer){clearInterval(timer);timer=null;} if(progTimer){clearInterval(progTimer);progTimer=null;} }
+
+  function render() {
+    var noImages = document.getElementById('noImages');
+    var offhours = document.getElementById('offhours');
+    if (!images.length) { stopCarousel(); noImages.className='show'; offhours.className=''; return; }
+    noImages.className = '';
+    if (!dentroDeHorario()) { stopCarousel(); offhours.className='show'; return; }
+    offhours.className = '';
+    buildSlides();
+    startCarousel();
+  }
+
+  function checkUpdates() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', API+'/imagenes?est='+EST, true);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState===4 && xhr.status===200) {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          var newHash = JSON.stringify(data.images||[]);
+          if (newHash !== lastHash) {
+            stopCarousel(); loadData(render);
+          }
+          // Actualizar badge campaña
+          var badge = document.getElementById('badge');
+          badge.style.display = data.campaña ? 'block' : 'none';
+          if (data.campaña) badge.textContent = '⭐ ' + data.campaña;
+        } catch(e) {}
+      }
+    };
+    xhr.send();
+  }
+
+  loadData(render);
+  setInterval(checkUpdates, 15000);
+  setInterval(function() {
+    if (!dentroDeHorario()) { stopCarousel(); document.getElementById('offhours').className='show'; }
+    else if (!timer && images.length>0) { document.getElementById('offhours').className=''; startCarousel(); }
+  }, 60000);
+</script>
+</body>
+</html>
