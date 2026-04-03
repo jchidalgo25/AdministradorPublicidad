@@ -6,7 +6,7 @@ const path    = require('path');
 const sql     = require('mssql');
 
 const app  = express();
-const PORT = 3000;
+const PORT = 3030;
 const DATA_FILE          = path.join(__dirname, 'data.json');
 const DATA_BANNER_FILE   = path.join(__dirname, 'data-banner.json');
 const IMAGES_DIR         = path.join(__dirname, 'imagenes');
@@ -27,7 +27,7 @@ safeEnsureDir(SETS_DIR); safeEnsureDir(SETS_BANNER_DIR);
 safeEnsureFile(DATA_FILE,{sets:[],campanas:[],config:{duration:5,fit:'cover',days:[1,2,3,4,5],timeStart:'08:00',timeEnd:'21:00'}});
 safeEnsureFile(DATA_BANNER_FILE,{sets:[],campanas:[],config:{duration:8,fit:'contain'}});
 
-const sqlConfig={user:'svc_sql_pos',password:'a17472Ol0',server:'srv-qa-ax',database:'POS',options:{encrypt:false,trustServerCertificate:true}};
+const sqlConfig={user:'svc_sql_pos',password:'a17472Ol0',server:'192.168.127.162',database:'POS',options:{encrypt:false,trustServerCertificate:true}};
 let pool=null;
 async function getPool(){if(!pool)pool=await sql.connect(sqlConfig);return pool;}
 
