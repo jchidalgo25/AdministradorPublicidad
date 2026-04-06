@@ -156,7 +156,7 @@
 <div class="container">
   <div class="tabs">
     <button class="tab active" onclick="switchTab('carrusel')">🖼️ Carrusel</button>
-    <button class="tab" onclick="switchTab('banner')">📌 Banner Derecho</button>
+    <button class="tab" onclick="switchTab('banner')">📌 Publicidad Lateral</button>
     <button class="tab" onclick="switchTab('encuesta-config')">⚙️ Encuesta</button>
     <button class="tab" onclick="switchTab('encuesta-respuestas')">📊 Respuestas</button>
   </div>
@@ -183,24 +183,6 @@
           <div class="card-title">Configuración</div>
           <div class="form-group"><label>Tiempo por imagen (seg)</label><input type="number" id="cfgDuration" value="5" min="1" max="60"></div>
           <div class="form-group"><label>Ajuste de imagen</label><select id="cfgFit"><option value="cover">Cover</option><option value="contain">Contain</option><option value="fill">Stretch</option></select></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Horario</div>
-          <div class="form-group"><label>Días activos</label>
-            <div class="schedule-days" id="scheduleDays">
-              <div class="day-pill active" data-day="1">Lun</div><div class="day-pill active" data-day="2">Mar</div>
-              <div class="day-pill active" data-day="3">Mié</div><div class="day-pill active" data-day="4">Jue</div>
-              <div class="day-pill active" data-day="5">Vie</div><div class="day-pill" data-day="6">Sáb</div><div class="day-pill" data-day="0">Dom</div>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group" style="margin:0"><label>Inicio</label><input type="time" id="cfgTimeStart" value="08:00"></div>
-            <div class="form-group" style="margin:0"><label>Fin</label><input type="time" id="cfgTimeEnd" value="23:00"></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">URL</div>
-          <div class="url-box"><span>http://localhost:3000/carrusel.html?est=XXX</span><button class="copy-btn" onclick="copyUrl('http://localhost:3000/carrusel.html')">Copiar</button></div>
           <button class="btn-primary" onclick="guardarConfig()">💾 Guardar Configuración</button>
         </div>
       </div>
@@ -230,10 +212,6 @@
           <div class="form-group"><label>Tiempo por imagen (seg)</label><input type="number" id="bannerCfgDuration" value="8" min="1" max="60"></div>
           <div class="form-group"><label>Ajuste</label><select id="bannerCfgFit"><option value="contain">Contain</option><option value="cover">Cover</option><option value="fill">Stretch</option></select></div>
           <button class="btn-primary" onclick="guardarConfigBanner()">💾 Guardar</button>
-        </div>
-        <div class="card">
-          <div class="card-title">URL Banner</div>
-          <div class="url-box"><span>http://localhost:3000/banner.html?est=XXX</span><button class="copy-btn" onclick="copyUrl('http://localhost:3000/banner.html')">Copiar</button></div>
         </div>
       </div>
     </div>
@@ -557,7 +535,7 @@ function renderSets(){
 }
 
 async function guardarConfig(){
-  const cfg={duration:parseInt(document.getElementById('cfgDuration').value)||5,fit:document.getElementById('cfgFit').value,timeStart:document.getElementById('cfgTimeStart').value,timeEnd:document.getElementById('cfgTimeEnd').value,days:[...document.querySelectorAll('.day-pill.active')].map(p=>parseInt(p.dataset.day))};
+  const cfg={duration:parseInt(document.getElementById('cfgDuration').value)||5,fit:document.getElementById('cfgFit').value};
   await fetch(API+'/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)});
   showToast('✅ Configuración guardada');
 }
