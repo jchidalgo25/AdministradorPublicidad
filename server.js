@@ -229,13 +229,13 @@ app.post('/api/login', async (req, res) => {
     const r = await p.request()
       .input('usuario',  sql.VarChar(50),  usuario)
       .input('password', sql.VarChar(255), password)
-      .query(`SELECT u.id, u.nombre, u.usuario, r.nombre AS rol
+      .query(`SELECT u.id, u.nombre, u.usuario, u.id_rol, r.nombre AS rol
               FROM dbo.admin_publicidad_usuarios u
               LEFT JOIN dbo.admin_publicidad_roles r ON r.id = u.id_rol
               WHERE u.usuario=@usuario AND u.password=@password AND u.activo=1`);
     if (r.recordset.length === 0) return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
     req.session.usuario = r.recordset[0];
-    res.json({ ok: true, nombre: r.recordset[0].nombre });
+    res.json({ ok: true, nombre: r.recordset[0].nombre, rol: r.recordset[0].rol, id_rol: r.recordset[0].id_rol });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -247,9 +247,36 @@ app.post('/api/logout', (req, res) => {
 
 app.get('/api/auth/check', (req, res) => {
   if (req.session && req.session.usuario)
-    return res.json({ autenticado: true, nombre: req.session.usuario.nombre });
+    return res.json({ autenticado: true, nombre: req.session.usuario.nombre, rol: req.session.usuario.rol, id_rol: req.session.usuario.id_rol });
   res.json({ autenticado: false });
 });
+
+// Middleware: requiere sesión activa
+function requireAuth(req, res, next) {
+  if (req.session && req.session.usuario) return next();
+  res.status(401).json({ error: 'No autenticado' });
+}
+// Middleware: solo roles con acceso a carrusel/banner (admin=1, Marketing=2)
+function requireMarketing(req, res, next) {
+  const id_rol = req.session && req.session.usuario && req.session.usuario.id_rol;
+  if (id_rol === 1 || id_rol === 2) return next();
+  res.status(403).json({ error: 'Acceso denegado' });
+}
+// Middleware: solo roles con acceso a encuestas (admin=1, Retail=3)
+function requireRetail(req, res, next) {
+  const id_rol = req.session && req.session.usuario && req.session.usuario.id_rol;
+  if (id_rol === 1 || id_rol === 3) return next();
+  res.status(403).json({ error: 'Acceso denegado' });
+}
+
+// Proteger APIs de carrusel y banner (Marketing + Admin)
+app.use(['/api/data','/api/config','/api/sets','/api/campanas',
+         '/api/banner/data','/api/banner/config','/api/banner/sets','/api/banner/campanas'],
+  requireAuth, requireMarketing);
+
+// Proteger APIs de encuesta (Retail + Admin)
+app.use(['/api/encuesta/preguntas','/api/encuesta/respuestas','/api/encuesta/establecimientos'],
+  requireAuth, requireRetail);
 
 app.listen(PORT,'0.0.0.0',()=>{
   console.log('===========================================');

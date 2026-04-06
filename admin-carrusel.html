@@ -818,17 +818,44 @@ document.getElementById('modalSet').addEventListener('click',e=>{if(e.target===d
 // Inicio
 cargarEstablecimientos().then(()=>{initCarrusel();initBanner();});
 
-// ── Auth ──────────────────────────────────────────────────────────
+// ── Auth y permisos por rol ───────────────────────────────────────
 async function cerrarSesion() {
   await fetch('/api/logout', { method: 'POST' });
   window.location.href = '/login.html';
 }
+
+// Tabs que puede ver cada rol (por id_rol)
+const PERMISOS_ROL = {
+  1: ['carrusel', 'banner', 'encuesta-config', 'encuesta-respuestas'], // admin
+  2: ['carrusel', 'banner'],                                            // Marketing
+  3: ['encuesta-config', 'encuesta-respuestas'],                        // Retail
+};
+
 (async () => {
   const r = await fetch('/api/auth/check');
   const d = await r.json();
   if (!d.autenticado) { window.location.href = '/login.html'; return; }
-  const el = document.getElementById('headerUsuario');
-  if (el && d.nombre) el.textContent = d.nombre;
+
+  // Mostrar nombre y rol en el header
+  const elNombre = document.getElementById('headerUsuario');
+  if (elNombre) elNombre.textContent = `${d.nombre} (${d.rol})`;
+
+  // Aplicar permisos: ocultar tabs no permitidos
+  const permitidos = PERMISOS_ROL[d.id_rol] || [];
+  const allTabs = document.querySelectorAll('.tabs .tab');
+  allTabs.forEach(btn => {
+    const onclick = btn.getAttribute('onclick') || '';
+    const match = onclick.match(/switchTab\('([^']+)'\)/);
+    const tabId = match ? match[1] : null;
+    if (tabId && !permitidos.includes(tabId)) btn.style.display = 'none';
+  });
+
+  // Si el tab activo no está permitido, activar el primer tab permitido
+  const tabActivo = document.querySelector('.tab-content.active');
+  const tabActivoId = tabActivo ? tabActivo.id : null;
+  if (tabActivoId && !permitidos.includes(tabActivoId) && permitidos.length > 0) {
+    switchTab(permitidos[0]);
+  }
 })();
 </script>
 </body>
