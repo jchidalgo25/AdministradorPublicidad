@@ -146,7 +146,11 @@
 <body>
 <header>
   <h1>📺 Administrador<span>Imagenes</span> POS</h1>
-  <div class="badge-header">PANEL DE PUBLICIDAD</div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="badge-header">PANEL DE PUBLICIDAD</div>
+    <span id="headerUsuario" style="font-size:.8rem;opacity:.85;"></span>
+    <button onclick="cerrarSesion()" style="background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.4);padding:6px 14px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;">Cerrar sesión</button>
+  </div>
 </header>
 <div class="container">
   <div class="tabs">
@@ -813,6 +817,19 @@ document.getElementById('modalSet').addEventListener('click',e=>{if(e.target===d
 
 // Inicio
 cargarEstablecimientos().then(()=>{initCarrusel();initBanner();});
+
+// ── Auth ──────────────────────────────────────────────────────────
+async function cerrarSesion() {
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.href = '/login.html';
+}
+(async () => {
+  const r = await fetch('/api/auth/check');
+  const d = await r.json();
+  if (!d.autenticado) { window.location.href = '/login.html'; return; }
+  const el = document.getElementById('headerUsuario');
+  if (el && d.nombre) el.textContent = d.nombre;
+})();
 </script>
 </body>
 </html>

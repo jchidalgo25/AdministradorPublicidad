@@ -1,4 +1,5 @@
 const express = require('express');
+const session = require('express-session');
 const multer  = require('multer');
 const cors    = require('cors');
 const fs      = require('fs');
@@ -31,7 +32,27 @@ const sqlConfig={user:'svc_sql_pos',password:'a17472Ol0',server:'192.168.127.162
 let pool=null;
 async function getPool(){if(!pool)pool=await sql.connect(sqlConfig);return pool;}
 
-app.use(cors()); app.use(express.json()); app.use(express.static(__dirname));
+app.use(cors());
+app.use(express.json());
+app.use(session({
+  secret: 'publicidad-pos-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 8 * 60 * 60 * 1000 } // 8 horas
+}));
+
+// ── Rutas públicas (no requieren login) ──────────────────────────
+app.get('/login.html', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
+
+// ── Protección de la página de administración ────────────────────
+app.get('/admin-carrusel.html', (req, res) => {
+  if (req.session && req.session.usuario) {
+    return res.sendFile(path.join(__dirname, 'admin-carrusel.html'));
+  }
+  res.redirect('/login.html');
+});
+
+app.use(express.static(__dirname));
 app.use('/imagenes',express.static(IMAGES_DIR));
 app.use('/imagenes-banner',express.static(BANNER_DIR));
 app.use('/imagenes-campana',express.static(CAMPANA_DIR));
@@ -196,6 +217,39 @@ app.delete('/api/encuesta/preguntas/:id',async(req,res)=>{try{const p=await getP
 app.get('/api/encuesta/respuestas',async(req,res)=>{try{const{desde,hasta,establecimiento,pregunta}=req.query;const p=await getPool();const r=p.request();let where='WHERE 1=1';if(desde){where+=' AND fecha>=@desde';r.input('desde',sql.DateTime,new Date(desde));}if(hasta){where+=' AND fecha<=@hasta';r.input('hasta',sql.DateTime,new Date(hasta+' 23:59:59'));}if(establecimiento){where+=' AND r.establecimiento=@est';r.input('est',sql.NVarChar(50),establecimiento);}if(pregunta){where+=' AND id_pregunta=@pq';r.input('pq',sql.Int,parseInt(pregunta));}const result=await r.query(`SELECT r.id,r.fecha,r.id_pregunta,r.pregunta_texto,r.identificacion,r.nombre_cliente,r.calificacion,r.descripcion,r.comentario,r.establecimiento,ISNULL(e.nombre,r.establecimiento) AS nombre_establecimiento,r.pto_emision,r.cajero,r.numero_factura,p.tipo FROM dbo.pos_encuesta_respuesta r LEFT JOIN dbo.pos_encuesta_pregunta p ON r.id_pregunta=p.id LEFT JOIN dbo.core_establecimiento e ON e.establecimiento=r.establecimiento ${where} ORDER BY r.fecha DESC`);res.json(result.recordset);}catch(e){res.status(500).json({error:e.message});}});
 app.get('/api/encuesta/establecimientos',async(req,res)=>{try{const p=await getPool();const r=await p.request().query('SELECT DISTINCT r.establecimiento,ISNULL(e.nombre,r.establecimiento) AS nombre FROM dbo.pos_encuesta_respuesta r LEFT JOIN dbo.core_establecimiento e ON e.establecimiento=r.establecimiento WHERE r.establecimiento IS NOT NULL ORDER BY nombre');res.json(r.recordset);}catch(e){res.status(500).json({error:e.message});}});
 app.get('/api/establecimientos',async(req,res)=>{try{const p=await getPool();const result=await p.request().query('SELECT establecimiento,nombre FROM dbo.core_establecimiento ORDER BY nombre ASC');res.json(result.recordset);}catch(e){res.status(500).json({error:e.message});}});
+
+// ════════════════════════════════════════════════════════════════
+// AUTH - LOGIN / LOGOUT
+// ════════════════════════════════════════════════════════════════
+app.post('/api/login', async (req, res) => {
+  const { usuario, password } = req.body;
+  if (!usuario || !password) return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
+  try {
+    const p = await getPool();
+    const r = await p.request()
+      .input('usuario',  sql.VarChar(50),  usuario)
+      .input('password', sql.VarChar(255), password)
+      .query(`SELECT u.id, u.nombre, u.usuario, r.nombre AS rol
+              FROM dbo.admin_publicidad_usuarios u
+              LEFT JOIN dbo.admin_publicidad_roles r ON r.id = u.id_rol
+              WHERE u.usuario=@usuario AND u.password=@password AND u.activo=1`);
+    if (r.recordset.length === 0) return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
+    req.session.usuario = r.recordset[0];
+    res.json({ ok: true, nombre: r.recordset[0].nombre });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/logout', (req, res) => {
+  req.session.destroy(() => res.json({ ok: true }));
+});
+
+app.get('/api/auth/check', (req, res) => {
+  if (req.session && req.session.usuario)
+    return res.json({ autenticado: true, nombre: req.session.usuario.nombre });
+  res.json({ autenticado: false });
+});
 
 app.listen(PORT,'0.0.0.0',()=>{
   console.log('===========================================');

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdManager POS — Iniciar sesión</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+  :root{--verde:#006633;--verde-claro:#00a352;--verde-oscuro:#004d26;--amarillo:#ffd200;--bg:#f5f5f0;--surface:#fff;--border:#e0e0d8;--text:#1a1a1a;--muted:#6b6b6b;--danger:#d94040;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+  header{background:var(--verde);color:#fff;padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,0.18);}
+  header h1{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:10px;}
+  header h1 span{color:var(--amarillo);}
+  .badge-header{background:var(--amarillo);color:var(--verde-oscuro);font-family:'Syne',sans-serif;font-weight:700;font-size:.75rem;padding:4px 12px;border-radius:20px;}
+  main{flex:1;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px 36px;width:100%;max-width:400px;box-shadow:0 4px 32px rgba(0,102,51,0.10);}
+  .login-title{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--verde);margin-bottom:6px;}
+  .login-sub{font-size:.85rem;color:var(--muted);margin-bottom:28px;}
+  .form-group{margin-bottom:16px;}
+  .form-group label{display:block;font-size:.78rem;font-weight:500;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+  .form-group input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.95rem;background:#fafaf8;color:var(--text);outline:none;transition:.15s;}
+  .form-group input:focus{border-color:var(--verde-claro);box-shadow:0 0 0 3px rgba(0,163,82,.1);}
+  .btn-login{width:100%;padding:13px;background:var(--verde);color:#fff;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;cursor:pointer;transition:.2s;margin-top:4px;}
+  .btn-login:hover{background:var(--verde-claro);}
+  .btn-login:disabled{background:#aaa;cursor:not-allowed;}
+  .error-msg{background:#fde8e8;color:var(--danger);border:1px solid #f8c8c8;border-radius:8px;padding:10px 14px;font-size:.85rem;margin-bottom:16px;display:none;}
+  .error-msg.show{display:block;}
+  .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<header>
+  <h1>📺 Administrador<span>Imagenes</span> POS</h1>
+  <div class="badge-header">PANEL DE PUBLICIDAD</div>
+</header>
+<main>
+  <div class="login-card">
+    <div class="login-title">Iniciar sesión</div>
+    <div class="login-sub">Ingresa tus credenciales para acceder al panel</div>
+    <div class="error-msg" id="errorMsg"></div>
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Usuario</label>
+        <input type="text" id="usuario" name="usuario" autocomplete="username" autofocus placeholder="Tu usuario">
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="password" name="password" autocomplete="current-password" placeholder="Tu contraseña">
+      </div>
+      <button type="submit" class="btn-login" id="btnLogin">Ingresar</button>
+    </form>
+  </div>
+</main>
+<script>
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnLogin');
+    const errorMsg = document.getElementById('errorMsg');
+    const usuario = document.getElementById('usuario').value.trim();
+    const password = document.getElementById('password').value;
+
+    errorMsg.classList.remove('show');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Verificando...';
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario, password })
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        window.location.href = '/admin-carrusel.html';
+      } else {
+        errorMsg.textContent = data.error || 'Error al iniciar sesión';
+        errorMsg.classList.add('show');
+        btn.disabled = false;
+        btn.innerHTML = 'Ingresar';
+      }
+    } catch {
+      errorMsg.textContent = 'Error de conexión con el servidor';
+      errorMsg.classList.add('show');
+      btn.disabled = false;
+      btn.innerHTML = 'Ingresar';
+    }
+  });
+</script>
+</body>
+</html>
