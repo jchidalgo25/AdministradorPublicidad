@@ -182,7 +182,13 @@
         <div class="card">
           <div class="card-title">Configuración</div>
           <div class="form-group"><label>Tiempo por imagen (seg)</label><input type="number" id="cfgDuration" value="5" min="1" max="60"></div>
-          <div class="form-group"><label>Ajuste de imagen</label><select id="cfgFit"><option value="cover">Cover</option><option value="contain">Contain</option><option value="fill">Stretch</option></select></div>
+          <div class="form-group">
+            <label>Ajuste de imagen</label>
+            <select id="cfgFit">
+              <option value="cover">Llenado Automático</option>
+              <option value="contain">Proporción Original</option>
+              <option value="fill">Ajuste Forzado</option>
+            </select></div>
           <button class="btn-primary" onclick="guardarConfig()">💾 Guardar Configuración</button>
         </div>
       </div>
