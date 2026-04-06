@@ -64,7 +64,7 @@ function makeUpload(dir){
   return multer({storage:multer.diskStorage({
     destination:(req,file,cb)=>cb(null,dir),
     filename:(req,file,cb)=>cb(null,Date.now()+'-'+Math.round(Math.random()*1e9)+path.extname(file.originalname))
-  }),limits:{fileSize:20*1024*1024},fileFilter:(req,file,cb)=>{const ok=/jpeg|jpg|png|webp|gif/.test(path.extname(file.originalname).toLowerCase());cb(ok?null:new Error('Solo imágenes'),ok);}});
+  }),limits:{fileSize:1*1024*1024},fileFilter:(req,file,cb)=>{const ok=/jpeg|jpg|png|webp|gif/.test(path.extname(file.originalname).toLowerCase());cb(ok?null:new Error('Solo imágenes'),ok);}});
 }
 const upload            = makeUpload(IMAGES_DIR);
 const uploadBanner      = makeUpload(BANNER_DIR);
