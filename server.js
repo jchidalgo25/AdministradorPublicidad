@@ -143,6 +143,10 @@ app.delete('/api/sets/:id',(req,res)=>{
 });
 
 app.post('/api/sets/:id/upload',uploadSet.array('images',50),(req,res)=>{
+  console.log('[UPLOAD SETS] id:', req.params.id);
+  console.log('[UPLOAD SETS] SETS_DIR:', SETS_DIR);
+  console.log('[UPLOAD SETS] dir existe:', fs.existsSync(SETS_DIR));
+  console.log('[UPLOAD SETS] req.files:', req.files ? req.files.map(f=>({name:f.originalname,size:f.size,dest:f.destination,filename:f.filename})) : 'NINGUNO');
   const d=safeReadJson(DATA_FILE,{sets:[],campanas:[],config:{}});
   const s=d.sets.find(s=>s.id==req.params.id);
   if(!s)return res.status(404).json({error:'No encontrado'});
@@ -281,9 +285,9 @@ app.use(['/api/encuesta/preguntas','/api/encuesta/respuestas','/api/encuesta/est
 
 // ── Manejador global de errores (multer y otros) ─────────────────
 app.use((err, req, res, next) => {
+  console.error('[ERROR GLOBAL] url:', req.url, '| code:', err.code, '| msg:', err.message);
   if (err && err.code === 'LIMIT_FILE_SIZE')
     return res.status(400).json({ error: 'Una o más imágenes superan el límite de 1 MB' });
-  console.error('Error en servidor:', err);
   res.status(500).json({ error: err.message || 'Error interno' });
 });
 
