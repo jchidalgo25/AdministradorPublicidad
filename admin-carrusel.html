@@ -656,8 +656,12 @@ async function subirImagenesSet(ctx,id,files){
   const form=new FormData();Array.from(files).forEach(f=>{if(f.type.startsWith('image/'))form.append('images',f);});
   if(!form.has('images'))return;
   const url=ctx==='carrusel'?`${API}/sets/${id}/upload`:`${API_BANNER}/sets/${id}/upload`;
-  showToast('⏳ Subiendo...');await fetch(url,{method:'POST',body:form});
-  showToast('✅ Imágenes agregadas');if(ctx==='carrusel')initCarrusel();else initBanner();
+  showToast('⏳ Subiendo...');
+  const r=await fetch(url,{method:'POST',body:form});
+  const d=await r.json();
+  if(!r.ok){showToast(`❌ ${d.error||'Error al subir'}`,true);return;}
+  showToast(`✅ ${d.count} imagen(es) agregada(s)`);
+  if(ctx==='carrusel')initCarrusel();else initBanner();
 }
 async function eliminarImagenSet(ctx,id,file){
   const url=ctx==='carrusel'?`${API}/sets/${id}/image/${file}`:`${API_BANNER}/sets/${id}/image/${file}`;
@@ -728,8 +732,12 @@ async function subirImagenesCampana(ctx,id,files){
   const form=new FormData();Array.from(files).forEach(f=>{if(f.type.startsWith('image/'))form.append('images',f);});
   if(!form.has('images'))return;
   const url=ctx==='carrusel'?`${API}/campanas/${id}/upload`:`${API_BANNER}/campanas/${id}/upload`;
-  showToast('⏳ Subiendo...');await fetch(url,{method:'POST',body:form});
-  showToast('✅ Imágenes agregadas');if(ctx==='carrusel')initCarrusel();else initBanner();
+  showToast('⏳ Subiendo...');
+  const r=await fetch(url,{method:'POST',body:form});
+  const d=await r.json();
+  if(!r.ok){showToast(`❌ ${d.error||'Error al subir'}`,true);return;}
+  showToast(`✅ ${d.count} imagen(es) agregada(s)`);
+  if(ctx==='carrusel')initCarrusel();else initBanner();
 }
 async function eliminarImagenCampana(ctx,id,file){const url=ctx==='carrusel'?`${API}/campanas/${id}/image/${file}`:`${API_BANNER}/campanas/${id}/image/${file}`;await fetch(url,{method:'DELETE'});showToast('🗑 Imagen eliminada');if(ctx==='carrusel')initCarrusel();else initBanner();}
 function cerrarModalCampana(){document.getElementById('modalCampana').classList.remove('show');}

@@ -73,6 +73,18 @@ const uploadCampanaBanner = makeUpload(CAMPANA_BANNER_DIR);
 const uploadSet         = makeUpload(SETS_DIR);
 const uploadSetBanner   = makeUpload(SETS_BANNER_DIR);
 
+// Wrapper para manejar errores de multer en Express 5
+function handleUpload(uploader) {
+  return (req, res, next) => {
+    uploader(req, res, (err) => {
+      if (!err) return next();
+      if (err.code === 'LIMIT_FILE_SIZE')
+        return res.status(400).json({ error: 'Una o más imágenes superan el límite de 1 MB' });
+      return res.status(400).json({ error: err.message || 'Error al subir archivo' });
+    });
+  };
+}
+
 // ── Helper: resolver imágenes según establecimiento ──────────────
 function resolverImagenesSet(data, est) {
   const sets = data.sets || [];
@@ -141,7 +153,7 @@ app.delete('/api/sets/:id',(req,res)=>{
   d.sets=d.sets.filter(s=>s.id!=req.params.id);d.updatedAt=new Date().toISOString();safeWriteJson(DATA_FILE,d);res.json({ok:true});
 });
 
-app.post('/api/sets/:id/upload',uploadSet.array('images',50),(req,res)=>{
+app.post('/api/sets/:id/upload',handleUpload(uploadSet.array('images',50)),(req,res)=>{
   const d=safeReadJson(DATA_FILE,{sets:[],campanas:[],config:{}});
   const s=d.sets.find(s=>s.id==req.params.id);
   if(!s)return res.status(404).json({error:'No encontrado'});
@@ -179,7 +191,7 @@ app.get('/api/campanas',(req,res)=>{const d=safeReadJson(DATA_FILE,{sets:[],camp
 app.post('/api/campanas',(req,res)=>{const d=safeReadJson(DATA_FILE,{sets:[],campanas:[],config:{}});if(!d.campanas)d.campanas=[];const nueva={id:Date.now(),...req.body,images:[]};d.campanas.push(nueva);d.updatedAt=new Date().toISOString();safeWriteJson(DATA_FILE,d);res.json({ok:true,id:nueva.id});});
 app.put('/api/campanas/:id',(req,res)=>{const d=safeReadJson(DATA_FILE,{sets:[],campanas:[],config:{}});const idx=d.campanas.findIndex(c=>c.id==req.params.id);if(idx>=0){d.campanas[idx]={...d.campanas[idx],...req.body,id:d.campanas[idx].id,images:d.campanas[idx].images};d.updatedAt=new Date().toISOString();safeWriteJson(DATA_FILE,d);res.json({ok:true});}else res.status(404).json({error:'No encontrado'});});
 app.delete('/api/campanas/:id',(req,res)=>{const d=safeReadJson(DATA_FILE,{sets:[],campanas:[],config:{}});d.campanas=d.campanas.filter(c=>c.id!=req.params.id);d.updatedAt=new Date().toISOString();safeWriteJson(DATA_FILE,d);res.json({ok:true});});
-app.post('/api/campanas/:id/upload',uploadCampana.array('images',20),(req,res)=>{const d=safeReadJson(DATA_FILE,{sets:[],campanas:[],config:{}});const c=d.campanas.find(c=>c.id==req.params.id);if(!c)return res.status(404).json({error:'No encontrado'});if(!c.images)c.images=[];req.files.forEach(f=>c.images.push({id:Date.now()+Math.random(),name:f.originalname,file:f.filename,url:'/imagenes-campana/'+f.filename}));d.updatedAt=new Date().toISOString();safeWriteJson(DATA_FILE,d);res.json({ok:true,count:req.files.length});});
+app.post('/api/campanas/:id/upload',handleUpload(uploadCampana.array('images',20)),(req,res)=>{const d=safeReadJson(DATA_FILE,{sets:[],campanas:[],config:{}});const c=d.campanas.find(c=>c.id==req.params.id);if(!c)return res.status(404).json({error:'No encontrado'});if(!c.images)c.images=[];req.files.forEach(f=>c.images.push({id:Date.now()+Math.random(),name:f.originalname,file:f.filename,url:'/imagenes-campana/'+f.filename}));d.updatedAt=new Date().toISOString();safeWriteJson(DATA_FILE,d);res.json({ok:true,count:req.files.length});});
 app.delete('/api/campanas/:id/image/:file',(req,res)=>{try{const fp=path.join(CAMPANA_DIR,req.params.file);if(fs.existsSync(fp))fs.unlinkSync(fp);}catch(e){}const d=safeReadJson(DATA_FILE,{sets:[],campanas:[],config:{}});const c=d.campanas.find(c=>c.id==req.params.id);if(c&&c.images)c.images=c.images.filter(i=>i.file!==req.params.file);d.updatedAt=new Date().toISOString();safeWriteJson(DATA_FILE,d);res.json({ok:true});});
 
 // ════════════════════════════════════════════════════════════════
@@ -191,7 +203,7 @@ app.get('/api/banner/sets',(req,res)=>{const d=safeReadJson(DATA_BANNER_FILE,{se
 app.post('/api/banner/sets',(req,res)=>{const d=safeReadJson(DATA_BANNER_FILE,{sets:[],campanas:[],config:{}});if(!d.sets)d.sets=[];const nuevo={id:Date.now(),...req.body,images:[]};d.sets.push(nuevo);d.updatedAt=new Date().toISOString();safeWriteJson(DATA_BANNER_FILE,d);res.json({ok:true,id:nuevo.id});});
 app.put('/api/banner/sets/:id',(req,res)=>{const d=safeReadJson(DATA_BANNER_FILE,{sets:[],campanas:[],config:{}});const idx=d.sets.findIndex(s=>s.id==req.params.id);if(idx>=0){d.sets[idx]={...d.sets[idx],...req.body,id:d.sets[idx].id,images:d.sets[idx].images};d.updatedAt=new Date().toISOString();safeWriteJson(DATA_BANNER_FILE,d);res.json({ok:true});}else res.status(404).json({error:'No encontrado'});});
 app.delete('/api/banner/sets/:id',(req,res)=>{const d=safeReadJson(DATA_BANNER_FILE,{sets:[],campanas:[],config:{}});d.sets=d.sets.filter(s=>s.id!=req.params.id);d.updatedAt=new Date().toISOString();safeWriteJson(DATA_BANNER_FILE,d);res.json({ok:true});});
-app.post('/api/banner/sets/:id/upload',uploadSetBanner.array('images',20),(req,res)=>{const d=safeReadJson(DATA_BANNER_FILE,{sets:[],campanas:[],config:{}});const s=d.sets.find(s=>s.id==req.params.id);if(!s)return res.status(404).json({error:'No encontrado'});if(!s.images)s.images=[];req.files.forEach(f=>s.images.push({id:Date.now()+Math.random(),name:f.originalname,file:f.filename,url:'/imagenes-sets-banner/'+f.filename}));d.updatedAt=new Date().toISOString();safeWriteJson(DATA_BANNER_FILE,d);res.json({ok:true,count:req.files.length});});
+app.post('/api/banner/sets/:id/upload',handleUpload(uploadSetBanner.array('images',20)),(req,res)=>{const d=safeReadJson(DATA_BANNER_FILE,{sets:[],campanas:[],config:{}});const s=d.sets.find(s=>s.id==req.params.id);if(!s)return res.status(404).json({error:'No encontrado'});if(!s.images)s.images=[];req.files.forEach(f=>s.images.push({id:Date.now()+Math.random(),name:f.originalname,file:f.filename,url:'/imagenes-sets-banner/'+f.filename}));d.updatedAt=new Date().toISOString();safeWriteJson(DATA_BANNER_FILE,d);res.json({ok:true,count:req.files.length});});
 app.delete('/api/banner/sets/:id/image/:file',(req,res)=>{try{const fp=path.join(SETS_BANNER_DIR,req.params.file);if(fs.existsSync(fp))fs.unlinkSync(fp);}catch(e){}const d=safeReadJson(DATA_BANNER_FILE,{sets:[],campanas:[],config:{}});const s=d.sets.find(s=>s.id==req.params.id);if(s&&s.images)s.images=s.images.filter(i=>i.file!==req.params.file);d.updatedAt=new Date().toISOString();safeWriteJson(DATA_BANNER_FILE,d);res.json({ok:true});});
 app.get('/api/banner/imagenes',(req,res)=>{
   const est=req.query.est||'';
@@ -204,7 +216,7 @@ app.get('/api/banner/campanas',(req,res)=>{const d=safeReadJson(DATA_BANNER_FILE
 app.post('/api/banner/campanas',(req,res)=>{const d=safeReadJson(DATA_BANNER_FILE,{sets:[],campanas:[],config:{}});if(!d.campanas)d.campanas=[];const nueva={id:Date.now(),...req.body,images:[]};d.campanas.push(nueva);d.updatedAt=new Date().toISOString();safeWriteJson(DATA_BANNER_FILE,d);res.json({ok:true,id:nueva.id});});
 app.put('/api/banner/campanas/:id',(req,res)=>{const d=safeReadJson(DATA_BANNER_FILE,{sets:[],campanas:[],config:{}});const idx=d.campanas.findIndex(c=>c.id==req.params.id);if(idx>=0){d.campanas[idx]={...d.campanas[idx],...req.body,id:d.campanas[idx].id,images:d.campanas[idx].images};d.updatedAt=new Date().toISOString();safeWriteJson(DATA_BANNER_FILE,d);res.json({ok:true});}else res.status(404).json({error:'No encontrado'});});
 app.delete('/api/banner/campanas/:id',(req,res)=>{const d=safeReadJson(DATA_BANNER_FILE,{sets:[],campanas:[],config:{}});d.campanas=d.campanas.filter(c=>c.id!=req.params.id);d.updatedAt=new Date().toISOString();safeWriteJson(DATA_BANNER_FILE,d);res.json({ok:true});});
-app.post('/api/banner/campanas/:id/upload',uploadCampanaBanner.array('images',20),(req,res)=>{const d=safeReadJson(DATA_BANNER_FILE,{sets:[],campanas:[],config:{}});const c=d.campanas.find(c=>c.id==req.params.id);if(!c)return res.status(404).json({error:'No encontrado'});if(!c.images)c.images=[];req.files.forEach(f=>c.images.push({id:Date.now()+Math.random(),name:f.originalname,file:f.filename,url:'/imagenes-campana-banner/'+f.filename}));d.updatedAt=new Date().toISOString();safeWriteJson(DATA_BANNER_FILE,d);res.json({ok:true,count:req.files.length});});
+app.post('/api/banner/campanas/:id/upload',handleUpload(uploadCampanaBanner.array('images',20)),(req,res)=>{const d=safeReadJson(DATA_BANNER_FILE,{sets:[],campanas:[],config:{}});const c=d.campanas.find(c=>c.id==req.params.id);if(!c)return res.status(404).json({error:'No encontrado'});if(!c.images)c.images=[];req.files.forEach(f=>c.images.push({id:Date.now()+Math.random(),name:f.originalname,file:f.filename,url:'/imagenes-campana-banner/'+f.filename}));d.updatedAt=new Date().toISOString();safeWriteJson(DATA_BANNER_FILE,d);res.json({ok:true,count:req.files.length});});
 app.delete('/api/banner/campanas/:id/image/:file',(req,res)=>{try{const fp=path.join(CAMPANA_BANNER_DIR,req.params.file);if(fs.existsSync(fp))fs.unlinkSync(fp);}catch(e){}const d=safeReadJson(DATA_BANNER_FILE,{sets:[],campanas:[],config:{}});const c=d.campanas.find(c=>c.id==req.params.id);if(c&&c.images)c.images=c.images.filter(i=>i.file!==req.params.file);d.updatedAt=new Date().toISOString();safeWriteJson(DATA_BANNER_FILE,d);res.json({ok:true});});
 
 // ════════════════════════════════════════════════════════════════
