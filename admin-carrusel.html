@@ -499,9 +499,6 @@ async function initCarrusel(){
 function applyConfig(cfg){
   if(cfg.duration)document.getElementById('cfgDuration').value=cfg.duration;
   if(cfg.fit)document.getElementById('cfgFit').value=cfg.fit;
-  if(cfg.timeStart)document.getElementById('cfgTimeStart').value=cfg.timeStart;
-  if(cfg.timeEnd)document.getElementById('cfgTimeEnd').value=cfg.timeEnd;
-  if(cfg.days)document.querySelectorAll('.day-pill').forEach(p=>p.classList.toggle('active',cfg.days.includes(parseInt(p.dataset.day))));
 }
 
 function renderSets(){
