@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <title>Carrusel POS</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -35,7 +37,7 @@
   }
 
   var EST = getEst();
-  var API = 'http://localhost:3000/api';
+  var API = 'http://192.168.127.220:3030/api';
   var images = [];
   var config = { duration:5, fit:'cover', days:[1,2,3,4,5], timeStart:'08:00', timeEnd:'21:00' };
   var current = 0, timer = null, progTimer = null, lastHash = '';
@@ -43,6 +45,8 @@
   function loadData(callback) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', API + '/imagenes?est=' + EST, true);
+    xhr.setRequestHeader('Cache-Control', 'no-cache');
+    xhr.setRequestHeader('Pragma', 'no-cache');
     xhr.onreadystatechange = function() {
       if (xhr.readyState === 4 && xhr.status === 200) {
         try {
@@ -130,6 +134,8 @@
   function checkUpdates() {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', API+'/imagenes?est='+EST, true);
+    xhr.setRequestHeader('Cache-Control', 'no-cache');
+    xhr.setRequestHeader('Pragma', 'no-cache');
     xhr.onreadystatechange = function() {
       if (xhr.readyState===4 && xhr.status===200) {
         try {

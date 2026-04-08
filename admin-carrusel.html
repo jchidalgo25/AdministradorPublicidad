@@ -169,19 +169,26 @@
           <div class="card-title">Sets de Imágenes</div>
           <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Cada set puede asignarse a locales específicos. Si un local no tiene set propio, se muestran los sets globales.</p>
           <button class="btn-secondary" style="margin-bottom:16px" onclick="abrirModalSet('carrusel')">+ Nuevo Set</button>
-          <div id="setsList"><div class="loading">Cargando...</div></div>
+          <div id="setsList">
+            <div class="loading">Cargando...</div>
+          </div>
         </div>
         <div class="card">
           <div class="card-title">🌟 Campañas Especiales</div>
           <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Las campañas activas reemplazan todos los sets durante su vigencia.</p>
           <button class="btn-secondary" style="margin-bottom:16px" onclick="abrirModalCampana('carrusel')">+ Nueva Campaña</button>
-          <div id="campanasList"><div class="loading">Cargando...</div></div>
+          <div id="campanasList">
+            <div class="loading">Cargando...</div>
+          </div>
         </div>
       </div>
       <div>
         <div class="card">
           <div class="card-title">Configuración</div>
-          <div class="form-group"><label>Tiempo por imagen (seg)</label><input type="number" id="cfgDuration" value="5" min="1" max="60"></div>
+          <div class="form-group">
+            <label>Tiempo por imagen (seg)</label>
+            <input type="number" id="cfgDuration" value="5" min="1" max="60">
+          </div>
           <div class="form-group">
             <label>Ajuste de imagen</label>
             <select id="cfgFit">
@@ -203,20 +210,34 @@
           <div class="card-title">Sets de Imágenes — Banner</div>
           <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Igual que el carrusel, cada set se puede asignar a locales específicos.</p>
           <button class="btn-secondary" style="margin-bottom:16px" onclick="abrirModalSet('banner')">+ Nuevo Set</button>
-          <div id="bannerSetsList"><div class="loading">Cargando...</div></div>
+          <div id="bannerSetsList">
+            <div class="loading">Cargando...</div>
+          </div>
         </div>
         <div class="card">
           <div class="card-title">🌟 Campañas Especiales</div>
           <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">Las campañas activas reemplazan todos los sets durante su vigencia.</p>
           <button class="btn-secondary" style="margin-bottom:16px" onclick="abrirModalCampana('banner')">+ Nueva Campaña</button>
-          <div id="bannerCampanasList"><div class="loading">Cargando...</div></div>
+          <div id="bannerCampanasList">
+            <div class="loading">Cargando...</div>
+          </div>
         </div>
       </div>
       <div>
         <div class="card">
           <div class="card-title">Configuración Banner</div>
-          <div class="form-group"><label>Tiempo por imagen (seg)</label><input type="number" id="bannerCfgDuration" value="8" min="1" max="60"></div>
-          <div class="form-group"><label>Ajuste</label><select id="bannerCfgFit"><option value="contain">Contain</option><option value="cover">Cover</option><option value="fill">Stretch</option></select></div>
+          <div class="form-group">
+            <label>Tiempo por imagen (seg)</label>
+            <input type="number" id="bannerCfgDuration" value="8" min="1" max="60">
+          </div>
+          <div class="form-group">
+            <label>Ajuste</label>
+            <select id="bannerCfgFit">
+              <option value="contain">Proporción Original</option>
+              <option value="cover">Llenado Automático</option>
+              <option value="fill">Ajuste Forzado</option>
+            </select>
+          </div>
           <button class="btn-primary" onclick="guardarConfigBanner()">💾 Guardar</button>
         </div>
       </div>
@@ -291,7 +312,7 @@
       <div class="filtros">
         <div class="form-group"><label>Desde</label><input type="date" id="filtroDesde"></div>
         <div class="form-group"><label>Hasta</label><input type="date" id="filtroHasta"></div>
-        <div class="form-group"><label>Establecimiento</label><select id="filtroEst"><option value="">Todos</option></select></div>
+        <div class="form-group"><label>Local</label><select id="filtroEst"><option value="">Todos</option></select></div>
         <div class="form-group"><label>Pregunta</label><select id="filtroPregunta"><option value="">Todas</option></select></div>
         <button class="btn-secondary" onclick="buscarRespuestas()">🔍 Buscar</button>
         <button class="btn-secondary" onclick="exportarCSV()">📥 CSV</button>
@@ -316,7 +337,7 @@
     <input type="hidden" id="setEditId">
     <div class="form-group"><label>Nombre del set</label><input type="text" id="setNombre" placeholder="Ej: Imágenes Globales, Promo Machala..."></div>
     <div class="form-group">
-      <label>Establecimientos (vacío = todos los locales)</label>
+      <label>Locales</label>
       <div class="ms-wrap" id="msSet">
         <div class="ms-input" id="msSetInput" onclick="toggleMs('Set')">
           <span class="ms-placeholder" id="msSetPlaceholder">Todos los locales (global)</span>
@@ -348,7 +369,7 @@
     <input type="hidden" id="campanaEditId">
     <div class="form-group"><label>Nombre</label><input type="text" id="campanaNombre" placeholder="Ej: Campaña Navidad 2025"></div>
     <div class="form-group">
-      <label>Establecimientos (vacío = todos los locales)</label>
+      <label>Locales</label>
       <div class="ms-wrap" id="msCampana">
         <div class="ms-input" id="msCampanaInput" onclick="toggleMs('Campana')">
           <span class="ms-placeholder" id="msCampanaPlaceholder">Todos los locales</span>
@@ -446,9 +467,16 @@ function switchTab(name){
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='encuesta-config')cargarPreguntas();
-  if(name==='encuesta-respuestas'){cargarFiltros();setFechasDefault();}
+  if(name==='encuesta-respuestas'){
+    cargarFiltros();
+    setFechasDefault();
+  }
 }
-function setFechasDefault(){const h=new Date().toISOString().split('T')[0],h30=new Date(Date.now()-30*86400000).toISOString().split('T')[0];if(!document.getElementById('filtroDesde').value)document.getElementById('filtroDesde').value=h30;if(!document.getElementById('filtroHasta').value)document.getElementById('filtroHasta').value=h;}
+function setFechasDefault(){
+  const h=new Date().toISOString().split('T')[0],h30=new Date(Date.now()-30*86400000).toISOString().split('T')[0];
+  if(!document.getElementById('filtroDesde').value)document.getElementById('filtroDesde').value=h30;
+  if(!document.getElementById('filtroHasta').value)document.getElementById('filtroHasta').value=h;
+}
 
 // ── MULTISELECT ───────────────────────────────────────────────
 function renderMsChips(ctx){
@@ -471,14 +499,43 @@ function renderMsList(ctx){
   const allChk=document.getElementById('ms'+ctx+'ChkAll');
   if(allChk)allChk.checked=msData.length>0&&msData.every(e=>msSelected[ctx].has(e.establecimiento));
 }
-function msToggle(ctx,cod){if(msSelected[ctx].has(cod))msSelected[ctx].delete(cod);else msSelected[ctx].add(cod);renderMsChips(ctx);renderMsList(ctx);}
-function msRemoveChip(ctx,cod,e){e.stopPropagation();msSelected[ctx].delete(cod);renderMsChips(ctx);renderMsList(ctx);}
-function selectAllMs(ctx){const all=msData.every(e=>msSelected[ctx].has(e.establecimiento));if(all)msSelected[ctx].clear();else msData.forEach(e=>msSelected[ctx].add(e.establecimiento));renderMsChips(ctx);renderMsList(ctx);}
-function filterMs(ctx,q){msFiltered[ctx]=msData.filter(e=>e.nombre.toLowerCase().includes(q.toLowerCase())||e.establecimiento.includes(q));renderMsList(ctx);}
-function toggleMs(ctx){const dd=document.getElementById('ms'+ctx+'Dropdown');const open=dd.style.display!=='none';dd.style.display=open?'none':'block';if(!open)renderMsList(ctx);}
-function getMsValue(ctx){return msSelected[ctx].size>0?[...msSelected[ctx]].join(','):null;}
-function setMsValue(ctx,valor){msSelected[ctx].clear();if(valor)valor.split(',').map(v=>v.trim()).forEach(v=>{if(v)msSelected[ctx].add(v);});renderMsChips(ctx);renderMsList(ctx);}
-function getMsArray(ctx){return msSelected[ctx].size>0?[...msSelected[ctx]]:[];}
+function msToggle(ctx,cod){
+  if(msSelected[ctx].has(cod))msSelected[ctx].delete(cod);
+  else msSelected[ctx].add(cod);renderMsChips(ctx);
+  renderMsList(ctx);
+}
+function msRemoveChip(ctx,cod,e){
+  e.stopPropagation();msSelected[ctx].delete(cod);renderMsChips(ctx);renderMsList(ctx);
+}
+function selectAllMs(ctx){
+  const all=msData.every(e=>msSelected[ctx].has(e.establecimiento));
+  if(all)msSelected[ctx].clear();
+  else msData.forEach(e=>msSelected[ctx].add(e.establecimiento));
+  renderMsChips(ctx);
+  renderMsList(ctx);
+}
+function filterMs(ctx,q){
+  msFiltered[ctx]=msData.filter(e=>e.nombre.toLowerCase().includes(q.toLowerCase())||e.establecimiento.includes(q));renderMsList(ctx);
+}
+function toggleMs(ctx){
+  const dd=document.getElementById('ms'+ctx+'Dropdown');
+  const open=dd.style.display!=='none';dd.style.display=open?'none':'block';
+  if(!open)renderMsList(ctx);
+}
+function getMsValue(ctx){
+  return msSelected[ctx].size>0?[...msSelected[ctx]].join(','):null;
+}
+function setMsValue(ctx,valor){
+  msSelected[ctx].clear();
+  if(valor)valor.split(',').map(v=>v.trim()).forEach(v=>{
+    if(v)msSelected[ctx].add(v);
+  });
+  renderMsChips(ctx);
+  renderMsList(ctx);
+}
+function getMsArray(ctx){
+  return msSelected[ctx].size>0?[...msSelected[ctx]]:[];
+}
 function setMsArray(ctx,arr){msSelected[ctx].clear();(arr||[]).forEach(v=>msSelected[ctx].add(v));renderMsChips(ctx);renderMsList(ctx);}
 
 document.addEventListener('click',e=>{
@@ -649,7 +706,9 @@ async function eliminarImagenSet(ctx,id,file){
   await fetch(url,{method:'DELETE'});showToast('🗑 Imagen eliminada');
   if(ctx==='carrusel')initCarrusel();else initBanner();
 }
-function cerrarModalSet(){document.getElementById('modalSet').classList.remove('show');}
+function cerrarModalSet(){
+  document.getElementById('modalSet').classList.remove('show');
+}
 
 // ── CAMPAÑAS ──────────────────────────────────────────────────
 function estadoCampana(c){const ahora=new Date();const desde=new Date(c.fecha_desde+'T'+(c.hora_desde||'00:00'));const hasta=new Date(c.fecha_hasta+'T'+(c.hora_hasta||'23:59'));if(!c.activo)return'<span class="badge-inactiva">Inactiva</span>';if(ahora<desde)return'<span class="badge-futura">Futura</span>';if(ahora>hasta)return'<span class="badge-expirada">Expirada</span>';return'<span class="badge-activa">🟢 Activa</span>';}
@@ -658,8 +717,12 @@ function _renderCampanas(arr,elId,ctx){
   if(!arr.length){el.innerHTML='<div style="color:var(--muted);font-size:.85rem;padding:8px 0">No hay campañas.</div>';return;}
   el.innerHTML=arr.map(c=>`<div class="campana-card"><div class="campana-header"><div><div class="campana-title">${c.nombre||'Sin nombre'} ${estadoCampana(c)}</div><div class="campana-dates">📅 ${c.fecha_desde} ${c.hora_desde} → ${c.fecha_hasta} ${c.hora_hasta}</div></div><div style="display:flex;gap:6px"><button class="btn-secondary" style="padding:4px 10px;font-size:.75rem" onclick="editarCampana('${ctx}',${c.id})">✏️</button><button class="btn-danger-sm" onclick="eliminarCampana('${ctx}',${c.id})">🗑</button></div></div><div class="campana-images">${(c.images||[]).map(img=>`<div class="campana-img"><img src="${img.url}"><button class="del-img" onclick="eliminarImagenCampana('${ctx}',${c.id},'${img.file}')">✕</button></div>`).join('')}<div class="upload-campana"><input type="file" accept="image/*" multiple onchange="subirImagenesCampana('${ctx}',${c.id},this.files)">+ Imágenes</div><div class="upload-hint">JPG, PNG JPG, PNG Máx. tamaño 1024 x 768px</div></div></div>`).join('');
 }
-function renderCampanas(){_renderCampanas(campanas,'campanasList','carrusel');}
-function renderBannerCampanas(){_renderCampanas(bannerCampanas,'bannerCampanasList','banner');}
+function renderCampanas(){
+  _renderCampanas(campanas,'campanasList','carrusel');
+}
+function renderBannerCampanas(){
+  _renderCampanas(bannerCampanas,'bannerCampanasList','banner');
+}
 function abrirModalCampana(ctx){
   document.getElementById('campanaCtx').value=ctx;
   document.getElementById('campanaEditId').value='';
@@ -707,7 +770,17 @@ async function guardarCampana(){
   cerrarModalCampana();showToast('✅ Campaña guardada');
   if(ctx==='carrusel')initCarrusel();else initBanner();
 }
-async function eliminarCampana(ctx,id){if(!confirm('¿Eliminar campaña?'))return;const url=ctx==='carrusel'?API+'/campanas/'+id:API_BANNER+'/campanas/'+id;await fetch(url,{method:'DELETE'});showToast('🗑 Eliminada');if(ctx==='carrusel')initCarrusel();else initBanner();}
+async function eliminarCampana(ctx,id){
+  if(!confirm('¿Eliminar campaña?'))return;
+  const url=ctx==='carrusel'?API+'/campanas/'+id:API_BANNER+'/campanas/'+id;
+  await fetch(url,{method:'DELETE'});
+  showToast('🗑 Eliminada');
+  if(ctx==='carrusel')
+    initCarrusel();
+  else 
+    initBanner();
+}
+
 async function subirImagenesCampana(ctx,id,files){
   if(!validarTamanoArchivos(files))return;
   const form=new FormData();Array.from(files).forEach(f=>{if(f.type.startsWith('image/'))form.append('images',f);});
@@ -720,15 +793,37 @@ async function subirImagenesCampana(ctx,id,files){
   showToast(`✅ ${d.count} imagen(es) agregada(s)`);
   if(ctx==='carrusel')initCarrusel();else initBanner();
 }
-async function eliminarImagenCampana(ctx,id,file){const url=ctx==='carrusel'?`${API}/campanas/${id}/image/${file}`:`${API_BANNER}/campanas/${id}/image/${file}`;await fetch(url,{method:'DELETE'});showToast('🗑 Imagen eliminada');if(ctx==='carrusel')initCarrusel();else initBanner();}
-function cerrarModalCampana(){document.getElementById('modalCampana').classList.remove('show');}
+async function eliminarImagenCampana(ctx,id,file){
+  const url=ctx==='carrusel'?`${API}/campanas/${id}/image/${file}`:`${API_BANNER}/campanas/${id}/image/${file}`;
+  await fetch(url,{method:'DELETE'});
+  showToast('🗑 Imagen eliminada');
+  if(ctx==='carrusel')
+    initCarrusel();
+  else 
+    initBanner();
+}
+function cerrarModalCampana(){
+  document.getElementById('modalCampana').classList.remove('show');
+}
 
 // ── ENCUESTA PREGUNTAS ────────────────────────────────────────
 const tipoLabels={EMOJIS:'😊 Emojis',CERRADA:'✅ Sí/No',NUMERICA:'⭐ Numérica',MULTIPLE:'☑️ Múltiple',ABIERTA:'✍️ Abierta'};
-function getNombreEstablecimientos(codigos){if(!codigos)return'Todos';return codigos.split(',').map(cod=>{const est=todosEstablecimientos.find(e=>e.establecimiento===cod.trim());return est?est.nombre:cod.trim();}).join(', ');}
-function selectTipo(btn){document.querySelectorAll('.tipo-selector:not(#editTipoSelector) .tipo-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');const tipo=btn.dataset.tipo;document.getElementById('nuevoTipo').value=tipo;document.getElementById('fieldOpciones').classList.toggle('show',tipo==='MULTIPLE');document.getElementById('fieldSelMultiple').classList.toggle('show',tipo==='MULTIPLE');}
-function selectTipoEdit(btn){document.querySelectorAll('#editTipoSelector .tipo-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');const tipo=btn.dataset.tipo;document.getElementById('editTipo').value=tipo;document.getElementById('editFieldOpciones').classList.toggle('show',tipo==='MULTIPLE');document.getElementById('editFieldSelMultiple').classList.toggle('show',tipo==='MULTIPLE');}
-function addOpcion(){const ed=document.getElementById('opcionesEditor');const n=ed.querySelectorAll('.opcion-row').length+1;const row=document.createElement('div');row.className='opcion-row';row.innerHTML=`<input type="text" placeholder="Opción ${n}"><button class="btn-del-opcion" onclick="delOpcion(this)">✕</button>`;ed.appendChild(row);}
+function getNombreEstablecimientos(codigos){
+  if(!codigos)
+    return'Todos';
+    return codigos.split(',').map(cod=>{const est=todosEstablecimientos.find(e=>e.establecimiento===cod.trim());
+    return est?est.nombre:cod.trim();}).join(', ');
+}
+
+function selectTipo(btn){
+  document.querySelectorAll('.tipo-selector:not(#editTipoSelector) .tipo-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const tipo=btn.dataset.tipo;document.getElementById('nuevoTipo').value=tipo;document.getElementById('fieldOpciones').classList.toggle('show',tipo==='MULTIPLE');document.getElementById('fieldSelMultiple').classList.toggle('show',tipo==='MULTIPLE');}
+function selectTipoEdit(btn){
+  document.querySelectorAll('#editTipoSelector .tipo-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');const tipo=btn.dataset.tipo;document.getElementById('editTipo').value=tipo;document.getElementById('editFieldOpciones').classList.toggle('show',tipo==='MULTIPLE');document.getElementById('editFieldSelMultiple').classList.toggle('show',tipo==='MULTIPLE');}
+function addOpcion(){
+  const ed=document.getElementById('opcionesEditor');const n=ed.querySelectorAll('.opcion-row').length+1;const row=document.createElement('div');row.className='opcion-row';row.innerHTML=`<input type="text" placeholder="Opción ${n}"><button class="btn-del-opcion" onclick="delOpcion(this)">✕</button>`;ed.appendChild(row);
+}
 function addOpcionEdit(){const ed=document.getElementById('editOpcionesEditor');const n=ed.querySelectorAll('.opcion-row').length+1;const row=document.createElement('div');row.className='opcion-row';row.innerHTML=`<input type="text" placeholder="Opción ${n}"><button class="btn-del-opcion" onclick="delOpcion(this)">✕</button>`;ed.appendChild(row);}
 function delOpcion(btn){const row=btn.parentElement;if(row.parentElement.querySelectorAll('.opcion-row').length>1)row.remove();}
 function getOpciones(editorId){return[...document.getElementById(editorId).querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);}
@@ -776,8 +871,15 @@ async function guardarEdicion(){
   cerrarModal();cargarPreguntas();showToast('✅ Actualizada');
 }
 
-async function eliminarPregunta(id){if(!confirm('¿Eliminar?'))return;await fetch(API_ENC+'/preguntas/'+id,{method:'DELETE'});cargarPreguntas();showToast('🗑 Eliminada');}
-function cerrarModal(){document.getElementById('modalEditar').classList.remove('show');}
+async function eliminarPregunta(id){
+  if(!confirm('¿Eliminar?'))
+  return;
+await fetch(API_ENC+'/preguntas/'+id,{method:'DELETE'});cargarPreguntas();showToast('🗑 Eliminada');
+}
+
+function cerrarModal(){
+  document.getElementById('modalEditar').classList.remove('show');
+}
 
 // ── RESPUESTAS ────────────────────────────────────────────────
 async function cargarFiltros(){
