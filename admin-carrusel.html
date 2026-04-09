@@ -588,7 +588,7 @@ function renderSets(){
       <div class="set-images">
         ${(s.images||[]).map(img=>`<div class="set-img"><img src="${img.url}"><button class="del-img" onclick="eliminarImagenSet('carrusel',${s.id},'${img.file}')">✕</button></div>`).join('')}
         <div class="upload-set"><input type="file" accept="image/*" multiple onchange="subirImagenesSet('carrusel',${s.id},this.files)">+ Imágenes</div>
-        <div class="upload-hint">JPG, PNG Máx. tamaño 1024 x 768px </div>
+        <div class="upload-hint">JPG, PNG Máx. tamaño 1 Mb </div>
       </div>
     </div>`;
   }).join('');
@@ -715,7 +715,7 @@ function estadoCampana(c){const ahora=new Date();const desde=new Date(c.fecha_de
 function _renderCampanas(arr,elId,ctx){
   const el=document.getElementById(elId);
   if(!arr.length){el.innerHTML='<div style="color:var(--muted);font-size:.85rem;padding:8px 0">No hay campañas.</div>';return;}
-  el.innerHTML=arr.map(c=>`<div class="campana-card"><div class="campana-header"><div><div class="campana-title">${c.nombre||'Sin nombre'} ${estadoCampana(c)}</div><div class="campana-dates">📅 ${c.fecha_desde} ${c.hora_desde} → ${c.fecha_hasta} ${c.hora_hasta}</div></div><div style="display:flex;gap:6px"><button class="btn-secondary" style="padding:4px 10px;font-size:.75rem" onclick="editarCampana('${ctx}',${c.id})">✏️</button><button class="btn-danger-sm" onclick="eliminarCampana('${ctx}',${c.id})">🗑</button></div></div><div class="campana-images">${(c.images||[]).map(img=>`<div class="campana-img"><img src="${img.url}"><button class="del-img" onclick="eliminarImagenCampana('${ctx}',${c.id},'${img.file}')">✕</button></div>`).join('')}<div class="upload-campana"><input type="file" accept="image/*" multiple onchange="subirImagenesCampana('${ctx}',${c.id},this.files)">+ Imágenes</div><div class="upload-hint">JPG, PNG JPG, PNG Máx. tamaño 1024 x 768px</div></div></div>`).join('');
+  el.innerHTML=arr.map(c=>`<div class="campana-card"><div class="campana-header"><div><div class="campana-title">${c.nombre||'Sin nombre'} ${estadoCampana(c)}</div><div class="campana-dates">📅 ${c.fecha_desde} ${c.hora_desde} → ${c.fecha_hasta} ${c.hora_hasta}</div></div><div style="display:flex;gap:6px"><button class="btn-secondary" style="padding:4px 10px;font-size:.75rem" onclick="editarCampana('${ctx}',${c.id})">✏️</button><button class="btn-danger-sm" onclick="eliminarCampana('${ctx}',${c.id})">🗑</button></div></div><div class="campana-images">${(c.images||[]).map(img=>`<div class="campana-img"><img src="${img.url}"><button class="del-img" onclick="eliminarImagenCampana('${ctx}',${c.id},'${img.file}')">✕</button></div>`).join('')}<div class="upload-campana"><input type="file" accept="image/*" multiple onchange="subirImagenesCampana('${ctx}',${c.id},this.files)">+ Imágenes</div><div class="upload-hint">JPG, PNG JPG, PNG Máx. tamaño 1 Mb</div></div></div>`).join('');
 }
 function renderCampanas(){
   _renderCampanas(campanas,'campanasList','carrusel');
