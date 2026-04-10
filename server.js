@@ -256,6 +256,37 @@ app.get('/api/auth/check', (req, res) => {
   res.json({ autenticado: false });
 });
 
+// ════════════════════════════════════════════════════════════════
+// CONFIGURACIÓN ENCUESTA
+// ════════════════════════════════════════════════════════════════
+app.get('/api/encuesta/config', async (req, res) => {
+  try {
+    const p = await getPool();
+    const r = await p.request()
+      .query("SELECT valor FROM dbo.core_parametro WHERE identificador = 'TIEMPO_ENCUESTA'");
+    const valor = r.recordset.length > 0 ? parseInt(r.recordset[0].valor) : 30;
+    res.json({ tiempo_encuesta: valor });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.put('/api/encuesta/config', async (req, res) => {
+  try {
+    const { tiempo_encuesta } = req.body;
+    if (!tiempo_encuesta || isNaN(tiempo_encuesta) || tiempo_encuesta < 5) {
+      return res.status(400).json({ error: 'Tiempo inválido, mínimo 5 segundos' });
+    }
+    const p = await getPool();
+    await p.request()
+      .input('valor', sql.NVarChar(50), tiempo_encuesta.toString())
+      .query("UPDATE dbo.core_parametro SET valor=@valor, fecha_modificacion=GETDATE() WHERE identificador='TIEMPO_ENCUESTA'");
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Middleware: requiere sesión activa
 function requireAuth(req, res, next) {
   if (req.session && req.session.usuario) return next();

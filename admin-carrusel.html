@@ -255,6 +255,15 @@
       </div>
       <div>
         <div class="card">
+        <div class="card-title">⏱️ Configuración Encuesta</div>
+        <div class="form-group">
+          <label>Tiempo de encuesta (segundos)</label>
+          <input type="number" id="cfgTiempoEncuesta" value="30" min="5" max="300">
+          <div class="upload-hint">Tiempo que el POS espera antes de ir al menú principal. Mínimo 5 segundos.</div>
+        </div>
+        <button class="btn-primary" onclick="guardarConfigEncuesta()">💾 Guardar</button>
+      </div>
+        <div class="card">
           <div class="card-title">Nueva Pregunta</div>
           <div class="form-group"><label>Tipo</label>
             <div class="tipo-selector">
@@ -466,7 +475,10 @@ function switchTab(name){
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',names[i]===name));
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
-  if(name==='encuesta-config')cargarPreguntas();
+  if(name==='encuesta-config') {
+  cargarPreguntas();
+  cargarConfigEncuesta();
+  }
   if(name==='encuesta-respuestas'){
     cargarFiltros();
     setFechasDefault();
@@ -919,8 +931,48 @@ async function buscarRespuestas(){
 function exportarCSV(){if(!respuestasData.length){showToast('❌ Primero busca');return;}const headers=['Fecha','Factura','Identificacion','Cliente','Local','Cod.Local','POS','Cajero','Pregunta','Tipo','Respuesta'];const rows=respuestasData.map(r=>[new Date(r.fecha).toLocaleString('es-EC'),r.numero_factura||'',r.identificacion||'',r.nombre_cliente||'',r.nombre_establecimiento||r.establecimiento||'',r.establecimiento||'',r.pto_emision||'',r.cajero||'',(r.pregunta_texto||'').replace(/,/g,';'),r.tipo||'',r.descripcion||''].map(v=>`"${v}"`).join(','));const csv=[headers.join(','),...rows].join('\n');const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='encuesta_'+new Date().toISOString().split('T')[0]+'.csv';a.click();}
 
 // ── UTILS ─────────────────────────────────────────────────────
-function copyUrl(url){navigator.clipboard.writeText(url);showToast('📋 Copiada');}
-function showToast(msg,isError=false){const t=document.getElementById('toast');t.textContent=msg;t.classList.toggle('error',isError);t.classList.add('show');setTimeout(()=>{t.classList.remove('show');t.classList.remove('error');},isError?5000:3000);}
+function copyUrl(url){
+  navigator.clipboard.writeText(url);showToast('📋 Copiada');
+}
+function showToast(msg,isError=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.toggle('error',isError);
+  t.classList.add('show');setTimeout(()=>{
+    t.classList.remove('show');
+    t.classList.remove('error');
+  },isError?5000:3000);
+}
+
+// ── CONFIGURACIÓN ENCUESTA ────────────────────────────────────
+async function cargarConfigEncuesta() {
+  try {
+    const r = await fetch(API_ENC + '/config');
+    const d = await r.json();
+    document.getElementById('cfgTiempoEncuesta').value = d.tiempo_encuesta || 30;
+  } catch (e) {
+    console.error('Error cargando config encuesta:', e);
+  }
+}
+
+async function guardarConfigEncuesta() {
+  const tiempo = parseInt(document.getElementById('cfgTiempoEncuesta').value);
+  if (!tiempo || tiempo < 5) {
+    showToast('❌ El tiempo mínimo es 5 segundos', true);
+    return;
+  }
+  try {
+    const r = await fetch(API_ENC + '/config', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tiempo_encuesta: tiempo })
+    });
+    const d = await r.json();
+    if (!r.ok) { showToast('❌ ' + (d.error || 'Error'), true); return; }
+    showToast('✅ Tiempo de encuesta guardado: ' + tiempo + 's');
+  } catch (e) {
+    showToast('❌ Error: ' + e.message, true);
+  }
+}
 
 document.querySelectorAll('.day-pill').forEach(p=>p.addEventListener('click',()=>p.classList.toggle('active')));
 document.getElementById('modalEditar').addEventListener('click',e=>{if(e.target===document.getElementById('modalEditar'))cerrarModal();});
