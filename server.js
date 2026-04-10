@@ -190,7 +190,20 @@ app.delete('/api/campanas/:id/image/:file',(req,res)=>{try{const fp=path.join(CA
 // ════════════════════════════════════════════════════════════════
 // BANNER - SETS
 // ════════════════════════════════════════════════════════════════
-app.get('/api/banner/data',(req,res)=>res.json(safeReadJson(DATA_BANNER_FILE,{sets:[],campanas:[],config:{}})));
+app.get('/api/banner/data',(req,res)=>{
+  const d = safeReadJson(DATA_BANNER_FILE,{sets:[],campanas:[],config:{}});
+  // Si no tiene updatedAt, agregarlo ahora y guardarlo
+  if(!d.updatedAt) {
+    d.updatedAt = new Date().toISOString();
+    safeWriteJson(DATA_BANNER_FILE, d);
+  }
+  res.json(d);
+});
+// Agregar después del endpoint anterior
+app.get('/api/banner/status',(req,res)=>{
+  const d = safeReadJson(DATA_BANNER_FILE,{sets:[],campanas:[],config:{}});
+  res.json({ updatedAt: d.updatedAt || null });
+});
 app.put('/api/banner/config',(req,res)=>{const d=safeReadJson(DATA_BANNER_FILE,{sets:[],campanas:[],config:{}});d.config={...d.config,...req.body};d.updatedAt=new Date().toISOString();safeWriteJson(DATA_BANNER_FILE,d);res.json({ok:true});});
 app.get('/api/banner/sets',(req,res)=>{const d=safeReadJson(DATA_BANNER_FILE,{sets:[],campanas:[],config:{}});res.json(d.sets||[]);});
 app.post('/api/banner/sets',(req,res)=>{const d=safeReadJson(DATA_BANNER_FILE,{sets:[],campanas:[],config:{}});if(!d.sets)d.sets=[];const nuevo={id:Date.now(),...req.body,images:[]};d.sets.push(nuevo);d.updatedAt=new Date().toISOString();safeWriteJson(DATA_BANNER_FILE,d);res.json({ok:true,id:nuevo.id});});
