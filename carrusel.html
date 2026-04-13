@@ -19,7 +19,6 @@
   #offhours{display:none;position:fixed;inset:0;background:#000d06;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-family:Arial,sans-serif;text-align:center;}
   #offhours.show{display:flex;}
   #offhours h2{font-size:1.2rem;opacity:.5;font-weight:300;}
-  #badge{position:fixed;top:10px;right:10px;background:rgba(255,200,0,0.85);color:#333;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;padding:4px 10px;border-radius:20px;display:none;z-index:200;}
 </style>
 </head>
 <body>
@@ -27,7 +26,6 @@
 <div id="offhours"><h2>🌙 Fuera de horario de publicidad</h2></div>
 <div id="container"></div>
 <div id="progressBar"></div>
-<div id="badge">⭐ CAMPAÑA ESPECIAL</div>
 <script>
   // Leer establecimiento de la URL: carrusel.html?est=055
   function getEst() {
@@ -59,9 +57,6 @@
             config.timeStart = data.config.timeStart || '08:00';
             config.timeEnd   = data.config.timeEnd   || '21:00';
           }
-          var badge = document.getElementById('badge');
-          badge.style.display = data.campaña ? 'block' : 'none';
-          if (data.campaña) badge.textContent = '⭐ ' + data.campaña;
           lastHash = JSON.stringify(images);
         } catch(e) {}
       }
@@ -144,10 +139,6 @@
           if (newHash !== lastHash) {
             stopCarousel(); loadData(render);
           }
-          // Actualizar badge campaña
-          var badge = document.getElementById('badge');
-          badge.style.display = data.campaña ? 'block' : 'none';
-          if (data.campaña) badge.textContent = '⭐ ' + data.campaña;
         } catch(e) {}
       }
     };
