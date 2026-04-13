@@ -189,13 +189,6 @@
             <label>Tiempo por imagen (seg)</label>
             <input type="number" id="cfgDuration" value="5" min="1" max="60">
           </div>
-          <div class="form-group">
-            <label>Ajuste de imagen</label>
-            <select id="cfgFit">
-              <option value="cover">Llenado Automático</option>
-              <option value="contain">Proporción Original</option>
-              <option value="fill">Ajuste Forzado</option>
-            </select></div>
           <button class="btn-primary" onclick="guardarConfig()">💾 Guardar Configuración</button>
         </div>
       </div>
@@ -229,14 +222,6 @@
           <div class="form-group">
             <label>Tiempo por imagen (seg)</label>
             <input type="number" id="bannerCfgDuration" value="8" min="1" max="60">
-          </div>
-          <div class="form-group">
-            <label>Ajuste</label>
-            <select id="bannerCfgFit">
-              <option value="contain">Proporción Original</option>
-              <option value="cover">Llenado Automático</option>
-              <option value="fill">Ajuste Forzado</option>
-            </select>
           </div>
           <button class="btn-primary" onclick="guardarConfigBanner()">💾 Guardar</button>
         </div>
@@ -573,7 +558,6 @@ async function initCarrusel(){
 
 function applyConfig(cfg){
   if(cfg.duration)document.getElementById('cfgDuration').value=cfg.duration;
-  if(cfg.fit)document.getElementById('cfgFit').value=cfg.fit;
 }
 
 function renderSets(){
@@ -607,7 +591,7 @@ function renderSets(){
 }
 
 async function guardarConfig(){
-  const cfg={duration:parseInt(document.getElementById('cfgDuration').value)||5,fit:document.getElementById('cfgFit').value};
+  const cfg={duration:parseInt(document.getElementById('cfgDuration').value)||5};
   await fetch(API+'/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)});
   showToast('✅ Configuración guardada');
 }
@@ -619,8 +603,8 @@ async function initBanner(){
   bannerCampanas=d.campanas||[];renderBannerCampanas();}
   catch(e){showToast('❌ Error banner');}
 }
-function applyBannerConfig(cfg){if(cfg.duration)document.getElementById('bannerCfgDuration').value=cfg.duration;if(cfg.fit)document.getElementById('bannerCfgFit').value=cfg.fit;}
-async function guardarConfigBanner(){const cfg={duration:parseInt(document.getElementById('bannerCfgDuration').value)||8,fit:document.getElementById('bannerCfgFit').value};await fetch(API_BANNER+'/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)});showToast('✅ Guardado');}
+function applyBannerConfig(cfg){if(cfg.duration)document.getElementById('bannerCfgDuration').value=cfg.duration;}
+async function guardarConfigBanner(){const cfg={duration:parseInt(document.getElementById('bannerCfgDuration').value)||8};await fetch(API_BANNER+'/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)});showToast('✅ Guardado');}
 
 function renderBannerSets(){
   const el=document.getElementById('bannerSetsList');
