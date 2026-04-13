@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <title>Banner POS</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -28,18 +30,25 @@
   }
 
   var EST = getEst();
-  var API = 'http://localhost:3000/api/banner';
+  // ← URL corregida apuntando al servidor correcto
+  var API = 'http://192.168.127.220:3030/api/banner';
   var images = [], config = {duration:8,fit:'contain'}, current=0, timer=null, lastHash='';
 
   function loadData(callback) {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', API+'/imagenes?est='+EST, true);
+    // ← Agregar timestamp para evitar caché
+    xhr.open('GET', API+'/imagenes?est='+EST+'&_t='+new Date().getTime(), true);
+    xhr.setRequestHeader('Cache-Control', 'no-cache');
+    xhr.setRequestHeader('Pragma', 'no-cache');
     xhr.onreadystatechange = function() {
       if (xhr.readyState===4 && xhr.status===200) {
         try {
           var data = JSON.parse(xhr.responseText);
           images = data.images||[];
-          if (data.config) { config.duration=parseInt(data.config.duration)||8; config.fit=data.config.fit||'contain'; }
+          if (data.config) {
+            config.duration = parseInt(data.config.duration)||8;
+            config.fit = data.config.fit||'contain';
+          }
           var badge = document.getElementById('badge');
           badge.style.display = data.campaña ? 'block' : 'none';
           if (data.campaña) badge.textContent = '⭐ ' + data.campaña;
@@ -52,41 +61,69 @@
   }
 
   function buildSlides() {
-    var container=document.getElementById('container'); container.innerHTML='';
+    var container=document.getElementById('container');
+    container.innerHTML='';
     for (var i=0;i<images.length;i++) {
-      var slide=document.createElement('div'); slide.className='slide'+(i===0?' active':''); slide.id='slide_'+i;
-      var img=document.createElement('img'); img.src=images[i].url; img.style.objectFit=config.fit;
-      slide.appendChild(img); container.appendChild(slide);
+      var slide=document.createElement('div');
+      slide.className='slide'+(i===0?' active':'');
+      slide.id='slide_'+i;
+      var img=document.createElement('img');
+      img.src=images[i].url+'?_t='+new Date().getTime(); // ← evitar caché en imágenes
+      img.style.objectFit=config.fit;
+      slide.appendChild(img);
+      container.appendChild(slide);
     }
   }
 
   function showSlide(index) {
     var slides=document.getElementsByClassName('slide');
     for (var i=0;i<slides.length;i++) slides[i].className='slide';
-    var el=document.getElementById('slide_'+index); if(el) el.className='slide active';
+    var el=document.getElementById('slide_'+index);
+    if(el) el.className='slide active';
   }
 
-  function nextSlide() { if(!images.length)return; current=(current+1)%images.length; showSlide(current); }
-  function startCarousel() { if(timer)clearInterval(timer); current=0; showSlide(0); if(images.length>1) timer=setInterval(nextSlide,config.duration*1000); }
-  function stopCarousel() { if(timer){clearInterval(timer);timer=null;} }
+  function nextSlide() {
+    if(!images.length) return;
+    current=(current+1)%images.length;
+    showSlide(current);
+  }
+
+  function startCarousel() {
+    if(timer) clearInterval(timer);
+    current=0;
+    showSlide(0);
+    if(images.length>1) timer=setInterval(nextSlide, config.duration*1000);
+  }
+
+  function stopCarousel() {
+    if(timer){ clearInterval(timer); timer=null; }
+  }
 
   function render() {
     var noImages=document.getElementById('noImages');
     if (!images.length) { stopCarousel(); noImages.className='show'; return; }
-    noImages.className=''; buildSlides(); startCarousel();
+    noImages.className='';
+    buildSlides();
+    startCarousel();
   }
 
   function checkUpdates() {
-    var xhr=new XMLHttpRequest(); xhr.open('GET',API+'/imagenes?est='+EST,true);
+    var xhr=new XMLHttpRequest();
+    xhr.open('GET', API+'/imagenes?est='+EST+'&_t='+new Date().getTime(), true);
+    xhr.setRequestHeader('Cache-Control', 'no-cache');
+    xhr.setRequestHeader('Pragma', 'no-cache');
     xhr.onreadystatechange=function() {
-      if (xhr.readyState===4&&xhr.status===200) {
+      if (xhr.readyState===4 && xhr.status===200) {
         try {
           var data=JSON.parse(xhr.responseText);
           var newHash=JSON.stringify(data.images||[]);
-          if (newHash!==lastHash) { stopCarousel(); loadData(render); }
+          if (newHash!==lastHash) {
+            stopCarousel();
+            loadData(render);
+          }
           var badge=document.getElementById('badge');
           badge.style.display=data.campaña?'block':'none';
-          if(data.campaña)badge.textContent='⭐ '+data.campaña;
+          if(data.campaña) badge.textContent='⭐ '+data.campaña;
         } catch(e) {}
       }
     };
@@ -94,7 +131,7 @@
   }
 
   loadData(render);
-  setInterval(checkUpdates,15000);
+  setInterval(checkUpdates, 15000);
 </script>
 </body>
 </html>
