@@ -912,7 +912,30 @@ async function buscarRespuestas(){
   }).join('');}
   catch(e){showToast('❌ Error: '+e.message);}
 }
-function exportarCSV(){if(!respuestasData.length){showToast('❌ Primero busca');return;}const headers=['Fecha','Factura','Identificacion','Cliente','Local','Cod.Local','POS','Cajero','Pregunta','Tipo','Respuesta'];const rows=respuestasData.map(r=>[new Date(r.fecha).toLocaleString('es-EC'),r.numero_factura||'',r.identificacion||'',r.nombre_cliente||'',r.nombre_establecimiento||r.establecimiento||'',r.establecimiento||'',r.pto_emision||'',r.cajero||'',(r.pregunta_texto||'').replace(/,/g,';'),r.tipo||'',r.descripcion||''].map(v=>`"${v}"`).join(','));const csv=[headers.join(','),...rows].join('\n');const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='encuesta_'+new Date().toISOString().split('T')[0]+'.csv';a.click();}
+
+function exportarCSV(){
+  if(!respuestasData.length){
+    showToast('❌ Primero busca');return;
+  }
+  const headers=['Fecha','Factura','Identificacion','Cliente','Local','Cod.Local','POS','Cajero','Pregunta','Tipo','Respuesta'];
+  const txt=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  const forceText=v=>'="' + String(v) + '"';
+  const rows=respuestasData.map(r=>[
+    txt(new Date(r.fecha).toLocaleString('es-EC')),
+    txt(r.numero_factura||''),
+    forceText(r.identificacion||''),
+    txt(r.nombre_cliente||''),
+    txt(r.nombre_establecimiento||r.establecimiento||''),
+    forceText(r.establecimiento||''),
+    forceText(r.pto_emision||''),
+    txt(r.cajero||''),
+    txt((r.pregunta_texto||'').replace(/,/g,';')),
+    txt(r.tipo||''),
+    txt(r.descripcion||'')
+  ].join(','));
+  const csv=[headers.join(','),...rows].join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='encuesta_'+new Date().toISOString().split('T')[0]+'.csv';a.click();}
 
 // ── UTILS ─────────────────────────────────────────────────────
 function copyUrl(url){
